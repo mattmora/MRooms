@@ -1,6 +1,7 @@
 import { Component } from 'react'
 import Head from 'next/head'
 import { withRouter } from 'next/router'
+import io from 'socket.io-client'
 
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'

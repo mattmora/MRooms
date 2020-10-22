@@ -39,6 +39,8 @@ export default class MyApp extends App {
 
   componentDidMount() {
 
+    console.log('app mounted')
+
     this.state.socket = io()
     const socket = this.state.socket
 
