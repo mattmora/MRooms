@@ -42,15 +42,14 @@ export default class MyApp extends App {
     console.log('app mounted')
 
     this.state.socket = io()
-    const socket = this.state.socket
 
-    socket.on('now', data => {
+    this.state.socket.on('now', data => {
       this.setState({
         message: data.message
       })
     })
 
-    socket.on('oscResponse', packet => {
+    this.state.socket.on('oscResponse', packet => {
       let message = osc.readPacket(packet, {})
       console.log(message.address)
     })

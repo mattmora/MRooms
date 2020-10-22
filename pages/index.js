@@ -13,9 +13,7 @@ class Index extends Component {
     super(props)
 
     this.state = {
-      roomInput: '',
-      message: this.props.message,
-      socket: this.props.socket
+      roomInput: ''
     }
   }
 
@@ -52,7 +50,7 @@ class Index extends Component {
             }
           ]
         })
-        this.state.socket.emit('oscMessage', packet.buffer)
+        this.props.socket.emit('oscMessage', packet.buffer)
       }
 
       e.preventDefault();
@@ -66,7 +64,7 @@ class Index extends Component {
           <title>{siteTitle}</title>
         </Head>
         <section className={utilStyles.headingMd}>
-          <p>{this.state.message}</p>
+          <p>{this.props.message}</p>
           <p>
             (This is a sample website - you’ll be building a site like this on{' '}
             <a href="https://nextjs.org/learn">our Next.js tutorial</a>.)
