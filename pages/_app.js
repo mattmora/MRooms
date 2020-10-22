@@ -5,6 +5,8 @@ import io from 'socket.io-client'
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
 import { Lib } from 'lance-gg'
+import osc from 'osc/dist/osc-browser'
+
 
 export default class MyApp extends App {
 
@@ -30,17 +32,27 @@ export default class MyApp extends App {
 
     // The App state can be accessed as props in components
     this.state = {
-      message: 'hello'
+      message: 'hello',
+      socket: {}
     }
   }
 
   componentDidMount() {
-    let socket = io()
+
+    this.state.socket = io()
+    const socket = this.state.socket
+
     socket.on('now', data => {
       this.setState({
         message: data.message
       })
     })
+
+    socket.on('oscResponse', packet => {
+      let message = osc.readPacket(packet, {})
+      console.log(message.address)
+    })
+
   }
 
   render() {

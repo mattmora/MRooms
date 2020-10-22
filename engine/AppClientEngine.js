@@ -1,7 +1,7 @@
 'use strict'
 
-const { ClientEngine } = require('lance-gg/dist/client-module/lance-gg.js')
-const AppRenderer = require('./AppRenderer.js')
+const { ClientEngine } = require('lance-gg/dist/client-module/lance-gg')
+const AppRenderer = require('./AppRenderer')
 const SyncClient = require('@ircam/sync/client')
 const { Transport } = require('tone')
 

@@ -12,7 +12,3 @@ module.exports = (phase, { defaultConfig }) => {
         reactStrictMode: true,
     }
 }
-
-    // "dev": "node server.js",
-    // "build": "next dev",
-    // "start": "next start -p $PORT"

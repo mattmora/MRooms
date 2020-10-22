@@ -1,10 +1,10 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { withRouter } from 'next/router'
-import Layout from '../../components/layout'
+import Layout from '../components/layout'
 // import osc from 'osc'
 
-function FirstPost({ router }) {
+function Room({ router }) {
 
     // var oscReady = false
 
@@ -35,7 +35,7 @@ function FirstPost({ router }) {
     return (
         <Layout>
             <Head>
-                <title>First Post</title>
+                <title>Room</title>
             </Head>
             <h1>{router.query.name}</h1>
             <h2>
@@ -47,4 +47,4 @@ function FirstPost({ router }) {
     )
 }
 
-export default withRouter(FirstPost)
+export default withRouter(Room)

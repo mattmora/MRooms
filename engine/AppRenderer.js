@@ -1,6 +1,6 @@
 "use strict";
 
-const { Renderer } = require('lance-gg/dist/client-module/lance-gg.js')
+const { Renderer } = require('lance-gg/dist/client-module/lance-gg')
 
 class AppRenderer extends Renderer {
 

@@ -3,6 +3,7 @@
 const { ServerEngine } = require('lance-gg')
 const SyncServer = require('@ircam/sync/server')
 const { Transport } = require('tone')
+const osc = require('osc/dist/osc-browser')
 
 class AppServerEngine extends ServerEngine {
 
@@ -26,6 +27,16 @@ class AppServerEngine extends ServerEngine {
 
         socket.emit('now', { 
             message: 'received'
+        })
+
+        socket.on('oscMessage', packet => {
+            let message = osc.readPacket(packet, {})
+            console.log(message.address)
+
+            for (let id of Object.keys(this.connectedPlayers)) {
+                this.connectedPlayers[id].socket.emit('oscResponse', packet)
+            }
+
         })
 
         socket.on('roomRequest', (roomName, params) => {

@@ -5,6 +5,7 @@ import { withRouter } from 'next/router'
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
 import TextField from '@material-ui/core/TextField'
+import osc from 'osc/dist/osc-browser'
 
 class Index extends Component {
 
@@ -32,10 +33,25 @@ class Index extends Component {
     const { router } = this.props;
 
     if (e.key === 'Enter') {
-      router.push({
-        pathname: '/posts/first-post',
-        query: { name: this.state.roomInput }
+
+      // Go to the room page
+      // router.push({
+      //   pathname: '/room',
+      //   query: { name: this.state.roomInput }
+      // })
+
+      const packet = osc.writePacket({
+        address: this.state.roomInput,
+        args: [
+          {
+            type: 'f',
+            value: 440.
+          }
+        ]
       })
+
+      this.props.socket.emit('oscMessage', packet.buffer)
+
       e.preventDefault();
     }
   }
