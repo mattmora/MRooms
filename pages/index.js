@@ -19,7 +19,7 @@ class Index extends Component {
 
   static async getInitialProps(context) {
     let query = context.query
-    return {query}
+    return { query }
   }
 
   handleChange = (e) => {
@@ -40,17 +40,18 @@ class Index extends Component {
       //   query: { name: this.state.roomInput }
       // })
 
-      const packet = osc.writePacket({
-        address: this.state.roomInput,
-        args: [
-          {
-            type: 'f',
-            value: 440.
-          }
-        ]
-      })
-
-      this.props.socket.emit('oscMessage', packet.buffer)
+      if (this.state.roomInput.startsWith('/')) {
+        const packet = osc.writePacket({
+          address: this.state.roomInput,
+          args: [
+            {
+              type: 'f',
+              value: 440.
+            }
+          ]
+        })
+        this.props.socket.emit('oscMessage', packet.buffer)
+      }
 
       e.preventDefault();
     }
