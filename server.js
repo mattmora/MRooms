@@ -1,21 +1,25 @@
+'use strict'
+
 // https://medium.com/@markcolling/integrating-socket-io-with-next-js-33c4c435065e
+// https://github.com/mars/heroku-nextjs-custom-server-express/blob/master/server.js
+
+const dev = process.env.NODE_ENV !== 'production'
+const port = process.env.PORT || 3000
 
 const app = require('express')()
 const server = require('http').Server(app)
-const io  = require('socket.io')(server)
-const next = require('next')
+const io = require('socket.io')(server)
 
-const dev = process.env.NODE_ENV !== 'production'
+const next = require('next')
 const nextApp = next({ dev })
 const nextHandler = nextApp.getRequestHandler()
 
-let port = 8080
+const AppGameEngine = require('./engine/AppGameEngine')
+const AppServerEngine = require('./engine/AppServerEngine')
+const { Lib } = require('lance-gg')
 
-io.on('connect', socket => { 
-    socket.emit('now', { 
-        message: 'received'
-    })
-})
+const gameEngine = new AppGameEngine({ traceLevel: Lib.Trace.TRACE_NONE })
+const serverEngine = new AppServerEngine(io, gameEngine, { traceLevel: Lib.Trace.TRACE_NONE, timeoutInterval: 1800 })
 
 nextApp.prepare().then(() => {
 
@@ -27,4 +31,6 @@ nextApp.prepare().then(() => {
         if (err) throw err
         console.log(`> Ready on http://localhost:${port}`)
     })
+
+    serverEngine.start();
 })

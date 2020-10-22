@@ -2,8 +2,6 @@ import { Component } from 'react'
 import Head from 'next/head'
 import { withRouter } from 'next/router'
 
-import io from 'socket.io-client'
-
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
 import TextField from '@material-ui/core/TextField'
@@ -13,10 +11,8 @@ class Index extends Component {
   constructor(props) {
     super(props)
 
-    this.roomInput = ''
-
     this.state = {
-      message: ''
+      roomInput: ''
     }
   }
 
@@ -25,18 +21,9 @@ class Index extends Component {
     return {query}
   }
 
-  componentDidMount() {
-    let socket = io()
-    socket.on('now', data => {
-      this.setState({
-        message: data.message
-      })
-    })
-  }
-
   handleChange = (e) => {
     const { target: { value } } = e
-    this.roomInput = value
+    this.state.roomInput = value
   }
 
   catchReturn = (e) => {
@@ -47,7 +34,7 @@ class Index extends Component {
     if (e.key === 'Enter') {
       router.push({
         pathname: '/posts/first-post',
-        query: { name: this.roomInput }
+        query: { name: this.state.roomInput }
       })
       e.preventDefault();
     }
@@ -60,7 +47,7 @@ class Index extends Component {
           <title>{siteTitle}</title>
         </Head>
         <section className={utilStyles.headingMd}>
-          <p>{this.state.message}</p>
+          <p>{this.props.message}</p>
           <p>
             (This is a sample website - you’ll be building a site like this on{' '}
             <a href="https://nextjs.org/learn">our Next.js tutorial</a>.)

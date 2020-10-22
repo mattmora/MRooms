@@ -1,7 +1,6 @@
 {
   "name": "utilosc",
   "version": "0.1.0",
-  "main": "index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -10,13 +9,16 @@
     "start": "next start -p $PORT"
   },
   "dependencies": {
+    "@ircam/sync": "^2.0.1",
     "@material-ui/core": "^4.11.0",
     "express": "^4.17.1",
+    "lance-gg": "^4.0.8",
     "next": "^9.5.5",
     "osc": "^2.4.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "socket.io": "^2.3.0",
-    "socket.io-client": "^2.3.1"
+    "socket.io-client": "^2.3.1",
+    "tone": "^14.7.58"
   }
 }
