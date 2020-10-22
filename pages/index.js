@@ -1,7 +1,6 @@
 import { Component } from 'react'
 import Head from 'next/head'
 import { withRouter } from 'next/router'
-import io from 'socket.io-client'
 
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
@@ -14,7 +13,9 @@ class Index extends Component {
     super(props)
 
     this.state = {
-      roomInput: ''
+      roomInput: '',
+      message: this.props.message,
+      socket: this.props.socket
     }
   }
 
@@ -51,7 +52,7 @@ class Index extends Component {
             }
           ]
         })
-        this.props.socket.emit('oscMessage', packet.buffer)
+        this.state.socket.emit('oscMessage', packet.buffer)
       }
 
       e.preventDefault();
@@ -65,7 +66,7 @@ class Index extends Component {
           <title>{siteTitle}</title>
         </Head>
         <section className={utilStyles.headingMd}>
-          <p>{this.props.message}</p>
+          <p>{this.state.message}</p>
           <p>
             (This is a sample website - you’ll be building a site like this on{' '}
             <a href="https://nextjs.org/learn">our Next.js tutorial</a>.)
