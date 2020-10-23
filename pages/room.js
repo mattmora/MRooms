@@ -1,50 +1,157 @@
+import { Component } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { withRouter } from 'next/router'
 import Layout from '../components/layout'
-// import osc from 'osc'
+import utilStyles from '../styles/utils.module.css'
+import TextField from '@material-ui/core/TextField'
 
-function Room({ router }) {
+import AppGameEngine from '../engine/AppGameEngine'
+import AppClientEngine from '../engine/AppClientEngine'
+import { Lib } from 'lance-gg'
+import osc from 'osc/dist/osc-browser'
+import io from 'socket.io-client'
 
-    // var oscReady = false
+class Room extends Component {
+    constructor(props) {
+        super(props)
 
-    // var oscPort = new osc.WebSocketPort({
-    //     url: "ws://localhost:7401", // URL to your Web Socket server.
-    //     metadata: true
-    // });
+        const options = {
+            traceLevel: Lib.Trace.TRACE_NONE,
+            delayInputCount: 3,
+            scheduler: 'render-schedule',
+            syncOptions: {
+                sync: 'extrapolate',
+                localObjBending: 1.0,
+                remoteObjBending: 1.0,
+                bendingIncrements: 1
+            }
+        }
 
-    // oscPort.open();
+        this.gameEngine = new AppGameEngine(options)
+        this.clientEngine = new AppClientEngine(this, this.gameEngine, options)
 
-    // oscPort.on("ready", function () {
-    //     oscReady = true
-    //     oscPort.send({
-    //         address: "/carrier/frequency",
-    //         args: [
-    //             {
-    //                 type: "f",
-    //                 value: 440
-    //             }
-    //         ]
-    //     })
-    // });
+        this.state = {
+            messageInput: '',
+            message: '',
+            stateText: ''
+        }
+    }
 
-    // oscPort.on("message", function (oscMsg) {
-    //     console.log("An OSC message just arrived!", oscMsg)
-    // });
+    componentDidMount() {
+        const { router } = this.props
 
-    return (
-        <Layout>
-            <Head>
-                <title>Room</title>
-            </Head>
-            <h1>{router.query.name}</h1>
-            <h2>
-                <Link href="/">
-                    <a>Back to home</a>
-                </Link>
-            </h2>
-        </Layout>
-    )
+        console.log('Room mounted')
+
+        this.localSocket = io(
+            `ws://${router.query.address}:${router.query.port}`
+        )
+
+        if (this.localSocket.connected) {
+            this.setState({
+                stateText: `Connected to ws://${router.query.address}:${router.query.port}.`
+            })
+        }
+        else {
+            this.setState({
+                stateText: `Failed to connect to ws://${router.query.address}:${router.query.port}.`
+            })
+        }
+        this.localSocket.on('connect', () => {
+            this.setState({
+                stateText: `Connected to ws://${router.query.address}:${router.query.port}.`
+            })
+        })
+
+        this.localSocket.on('reconnect', () => {
+            this.setState({
+                stateText: `Connected to ws://${router.query.address}:${router.query.port}.`
+            })
+        })
+        this.localSocket.on('disconnect', (reason) => {
+            if (reason === 'io server disconnect') {
+                this.setState({
+                    stateText: `Disconnected from ws://${router.query.address}:${router.query.port}.`
+                })
+            }
+            else {
+                this.setState({
+                    stateText: `Disconnected from ws://${router.query.address}:${router.query.port}. Attempting to reconnect.`
+                })
+            }
+
+        })
+        this.localSocket.on('message', (data) => {
+            console.log(data)
+        })
+
+        this.clientEngine.start()
+    }
+
+    componentWillUnmount() {
+        console.log('Room will unmount')
+        this.clientEngine.disconnect()
+        this.localSocket.close()
+    }
+
+    handleChange = (e) => {
+        const {
+            target: { value }
+        } = e
+        this.state.messageInput = value
+    }
+
+    catchReturn = (e) => {
+        console.log(`Pressed keyCode ${e.key}`)
+
+        if (e.key === 'Enter') {
+            if (this.state.messageInput.startsWith('/')) {
+                const packet = osc.writePacket({
+                    address: this.state.messageInput,
+                    args: [
+                        {
+                            type: 'f',
+                            value: 440
+                        }
+                    ]
+                })
+
+                // Make sure the client socket exists
+                if (this.clientEngine.socket)
+                    this.clientEngine.socket.emit('oscMessage', packet.buffer)
+            }
+
+            e.preventDefault()
+        }
+    }
+
+    render() {
+        const { router } = this.props
+
+        return (
+            <Layout>
+                <Head>
+                    <title>Room</title>
+                </Head>
+                <h1>{router.query.name}</h1>
+                <section className={utilStyles.headingMd}>
+                    <p>
+                        Enter a message to send to everyone in{' '}
+                        {router.query.name}.
+                    </p>
+                    <p>{this.state.stateText}</p>
+                    <TextField
+                        id="message-input"
+                        label="Message"
+                        variant="outlined"
+                        onChange={this.handleChange}
+                        onKeyPress={this.catchReturn}
+                    />
+                </section>
+                <h2>{this.state.message}</h2>
+            </Layout>
+        )
+    }
 }
 
 export default withRouter(Room)

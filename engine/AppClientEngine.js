@@ -4,12 +4,13 @@ const { ClientEngine } = require('lance-gg/dist/client-module/lance-gg')
 const AppRenderer = require('./AppRenderer')
 const SyncClient = require('@ircam/sync/client')
 const { Transport } = require('tone')
+const osc = require('osc/dist/osc-browser')
 
 class AppClientEngine extends ClientEngine {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     /// INITIALIZATION AND CONNECTION
-    constructor(gameEngine, options) {
+    constructor(app, gameEngine, options) {
         super(gameEngine, options, AppRenderer)
 
         this.syncClient = null
@@ -23,16 +24,42 @@ class AppClientEngine extends ClientEngine {
 
         this.gameEngine.on('client__preStep', this.preStepLogic.bind(this))
         this.gameEngine.on('client__postStep', this.postStepLogic.bind(this))
+
+        this.app = app
     }
 
     start() {
         super.start()
-        
+
     }
 
     connect(options = {}) {
         return super.connect().then(() => {
-            
+            return new Promise((resolve, reject) => {
+
+                this.socket.on('now', data => {
+                    this.app.setState({
+                        message: data.message
+                    })
+                })
+
+                this.socket.on('oscResponse', packet => {
+
+                    if (this.app.localSocket.connected) {
+                        // Send the received packet to localhost
+                        this.app.localSocket.send(packet)
+                    }
+
+                    // Read the packet and do whatever with it
+                    let message = osc.readPacket(packet, {})
+                    this.app.setState({
+                        message: message.address
+                    })
+                    console.log(message.address)
+                })
+
+
+            })
         })
     }
 
@@ -50,7 +77,7 @@ class AppClientEngine extends ClientEngine {
                 //console.log('[ping] - id: %s, pingTime: %s', request[1], request[2])
 
                 this.socket.emit('syncClientData', request)
-            },       
+            },
             // receive function  
             callback => {
                 // unpack args before executing the callback
@@ -69,7 +96,7 @@ class AppClientEngine extends ClientEngine {
                         callback(pingId, clientPingTime, serverPingTime, serverPongTime)
                     }
                 })
-            }, 
+            },
             // status report function
             status => { }//console.log(status) }
         )
@@ -84,7 +111,7 @@ class AppClientEngine extends ClientEngine {
             if (this.params.isLeader != null) this.isLeader = this.params.isLeader
             this.socket.emit('assignToRoom', roomName, this.params)
         }
-    } 
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     /// SOUND HANDLING AND CLIENT LOGIC

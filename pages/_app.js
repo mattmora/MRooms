@@ -6,6 +6,7 @@ export default class MyApp extends App {
   constructor(props) {
     super(props)
 
+    console.log('App constructor')
   }
 
   render() {

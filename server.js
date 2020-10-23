@@ -14,6 +14,7 @@ const nextApp = next({ dev })
 const nextHandler = nextApp.getRequestHandler()
 
 const socket = require('socket.io')
+const osc = require('osc')
 
 const AppGameEngine = require('./engine/AppGameEngine')
 const AppServerEngine = require('./engine/AppServerEngine')
@@ -33,7 +34,7 @@ nextApp.prepare().then(() => {
     const io = socket(requestHandler)
 
     const gameEngine = new AppGameEngine({ traceLevel: Lib.Trace.TRACE_NONE })
-    const serverEngine = new AppServerEngine(io, gameEngine, { traceLevel: Lib.Trace.TRACE_NONE, timeoutInterval: 1800 })
+    const serverEngine = new AppServerEngine(io, gameEngine, { traceLevel: Lib.Trace.TRACE_NONE, timeoutInterval: 0 })
 
     serverEngine.start();
 })
