@@ -41,7 +41,7 @@ export default class MyApp extends App {
 
     console.log('app mounted')
 
-    this.state.socket = io()
+    this.state.socket = io(window.location.origin)
 
     this.state.socket.on('now', data => {
       this.setState({
@@ -53,6 +53,8 @@ export default class MyApp extends App {
       let message = osc.readPacket(packet, {})
       console.log(message.address)
     })
+
+    this.clientEngine.start()
 
   }
 
