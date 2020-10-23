@@ -1,10 +1,15 @@
 import { Component } from 'react'
 import Head from 'next/head'
 import { withRouter } from 'next/router'
+import io from 'socket.io-client'
 
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
 import TextField from '@material-ui/core/TextField'
+
+import AppGameEngine from '../engine/AppGameEngine'
+import AppClientEngine from '../engine/AppClientEngine'
+import { Lib } from 'lance-gg'
 import osc from 'osc/dist/osc-browser'
 
 class Index extends Component {
@@ -13,13 +18,45 @@ class Index extends Component {
     super(props)
 
     this.state = {
-      roomInput: ''
+      roomInput: '',
+      message: 'hello'
     }
+
+    const options = {
+      traceLevel: Lib.Trace.TRACE_NONE,
+      delayInputCount: 3,
+      scheduler: 'render-schedule',
+      syncOptions: {
+        sync: 'extrapolate',
+        localObjBending: 1.0,
+        remoteObjBending: 1.0,
+        bendingIncrements: 1
+      }
+    }
+
+    this.gameEngine = new AppGameEngine(options);
+    this.clientEngine = new AppClientEngine(this.gameEngine, options);
   }
 
-  static async getInitialProps(context) {
-    let query = context.query
-    return { query }
+  componentDidMount() {
+
+    console.log('app mounted')
+
+    this.socket = io(window.location.origin)
+
+    this.socket.on('now', data => {
+      this.setState({
+        message: data.message
+      })
+    })
+
+    this.socket.on('oscResponse', packet => {
+      let message = osc.readPacket(packet, {})
+      console.log(message.address)
+    })
+
+    this.clientEngine.start()
+
   }
 
   handleChange = (e) => {
@@ -50,7 +87,8 @@ class Index extends Component {
             }
           ]
         })
-        this.props.socket.emit('oscMessage', packet.buffer)
+
+        this.socket.emit('oscMessage', packet.buffer)
       }
 
       e.preventDefault();
@@ -64,7 +102,7 @@ class Index extends Component {
           <title>{siteTitle}</title>
         </Head>
         <section className={utilStyles.headingMd}>
-          <p>{this.props.message}</p>
+          <p>{this.state.message}</p>
           <p>
             (This is a sample website - you’ll be building a site like this on{' '}
             <a href="https://nextjs.org/learn">our Next.js tutorial</a>.)
