@@ -6,9 +6,9 @@
 const dev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 3000
 
-const app = require('express')()
-const server = require('http').Server(app)
-const io = require('socket.io')(server)
+const express = require('express')()
+const http = require('http').Server(express)
+const io = require('socket.io')(http)
 
 const next = require('next')
 const nextApp = next({ dev })
@@ -19,20 +19,20 @@ const AppServerEngine = require('./engine/AppServerEngine')
 const { Lib } = require('lance-gg')
 
 nextApp.prepare().then(() => {
-    app.get('*', (req, res) => {
+    express.get('*', (req, res) => {
         return nextHandler(req, res)
     })
 
-    const requestHandler = server.listen(port, (err) => {
+    const requestHandler = http.listen(port, (err) => {
         if (err) throw err
         console.log(`> Ready on http://localhost:${port}`)
     })
-
-    const gameEngine = new AppGameEngine({ traceLevel: Lib.Trace.TRACE_NONE })
-    const serverEngine = new AppServerEngine(io, gameEngine, {
-        traceLevel: Lib.Trace.TRACE_NONE,
-        timeoutInterval: 0
-    })
-
-    serverEngine.start()
 })
+
+const gameEngine = new AppGameEngine({ traceLevel: Lib.Trace.TRACE_NONE })
+const serverEngine = new AppServerEngine(io, gameEngine, {
+    traceLevel: Lib.Trace.TRACE_NONE,
+    timeoutInterval: 0
+})
+
+serverEngine.start()
