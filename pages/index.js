@@ -6,42 +6,20 @@ import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
 import { TextField } from '@material-ui/core'
 
-const defaultAddress = 'ws://localhost'
-const defaultPort = ''
-
 class Index extends Component {
     constructor(props) {
         super(props)
 
         this.state = {
-            room: '',
-            address: defaultAddress,
-            port: defaultPort
+            roomField: ''
         }
     }
 
-    handleRoomChange = (e) => {
-        const {
-            target: { value }
-        } = e
-        this.state.room = value
+    handleChange = (e) => {
+        this.state[e.target.id] = e.target.value
     }
 
-    handleAddressChange = (e) => {
-        const {
-            target: { value }
-        } = e
-        this.state.address = value
-    }
-
-    handlePortChange = (e) => {
-        const {
-            target: { value }
-        } = e
-        this.state.port = value
-    }
-
-    catchReturn = (e) => {
+    handleKeyPress = (e) => {
         console.log(`Pressed keyCode ${e.key}`)
 
         const { router } = this.props
@@ -51,9 +29,7 @@ class Index extends Component {
             router.push({
                 pathname: '/room',
                 query: {
-                    name: this.state.room,
-                    address: this.state.address,
-                    port: this.state.port
+                    room: this.state.roomField,
                 }
             })
 
@@ -76,45 +52,11 @@ class Index extends Component {
                         }}
                     >
                         <TextField
-                            id="room-field"
-                            label="Room name"
+                            id="roomField"
+                            label="Room"
                             variant="outlined"
-                            onChange={this.handleRoomChange}
-                            onKeyPress={this.catchReturn}
-                        />
-                    </div>
-                    <p></p>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <TextField
-                            id="ip-field"
-                            label="IP address"
-                            variant="outlined"
-                            defaultValue={defaultAddress}
-                            onChange={this.handleAddressChange}
-                            onKeyPress={this.catchReturn}
-                        />
-                    </div>
-                    <p></p>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <TextField
-                            id="port-field"
-                            label="Port (optional)"
-                            variant="outlined"
-                            defaultValue={defaultPort}
-                            onChange={this.handlePortChange}
-                            onKeyPress={this.catchReturn}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
                         />
                     </div>
                 </section>

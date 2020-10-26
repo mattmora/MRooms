@@ -15,6 +15,7 @@
         "express": "^4.17.1",
         "lance-gg": "^4.0.8",
         "next": "^9.5.5",
+        "normalize-port": "^1.0.0",
         "osc": "^2.4.1",
         "query-string": "^6.13.6",
         "react": "16.13.1",
@@ -40,6 +41,7 @@
         "trailingComma": "none",
         "tabWidth": 4,
         "semi": false,
-        "singleQuote": true
+        "singleQuote": true,
+        "printWidth": 100
     }
 }
