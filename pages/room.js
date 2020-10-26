@@ -41,7 +41,8 @@ class Room extends Component {
                 localObjBending: 1.0,
                 remoteObjBending: 1.0,
                 bendingIncrements: 1
-            }
+            },
+            serverURL: window.location.origin
         }
         const qsOptions = querystring.parse(window.location.search)
 
@@ -51,7 +52,6 @@ class Room extends Component {
         this.gameEngine = new AppGameEngine(options)
         this.clientEngine = new AppClientEngine(this, this.gameEngine, options)
 
-        console.log(window.location)
         // ClientEngine options.autoConnect is true by default, so this calls connect()
         this.clientEngine.start()
     }
