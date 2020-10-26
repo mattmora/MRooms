@@ -51,6 +51,7 @@ class Room extends Component {
         this.gameEngine = new AppGameEngine(options)
         this.clientEngine = new AppClientEngine(this, this.gameEngine, options)
 
+        console.log(window.location)
         // ClientEngine options.autoConnect is true by default, so this calls connect()
         this.clientEngine.start()
     }
