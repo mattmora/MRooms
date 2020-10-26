@@ -6,7 +6,7 @@ import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
 import { TextField } from '@material-ui/core'
 
-const defaultAddress = 'localhost'
+const defaultAddress = 'ws://localhost'
 const defaultPort = ''
 
 class Index extends Component {

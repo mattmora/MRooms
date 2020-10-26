@@ -10,13 +10,14 @@ import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
 import { Lib } from 'lance-gg'
 import osc from 'osc/dist/osc-browser'
+import querystring from 'query-string'
 
 class Room extends Component {
     constructor(props) {
         super(props)
 
         console.log('Room constructor')
-        
+
         this.state = {
             router: this.props.router,
             messageInput: '',
@@ -28,7 +29,10 @@ class Room extends Component {
     componentDidMount() {
         console.log('Room mounted')
 
-        const options = {
+        const { router } = this.props
+
+        const defaults = {
+            verbose: true,
             traceLevel: Lib.Trace.TRACE_NONE,
             delayInputCount: 3,
             scheduler: 'render-schedule',
@@ -39,6 +43,10 @@ class Room extends Component {
                 bendingIncrements: 1
             }
         }
+        const qsOptions = querystring.parse(window.location.search)
+
+        let options = Object.assign(defaults, qsOptions)
+        console.log(options)
 
         this.gameEngine = new AppGameEngine(options)
         this.clientEngine = new AppClientEngine(this, this.gameEngine, options)
@@ -53,9 +61,7 @@ class Room extends Component {
     }
 
     handleChange = (e) => {
-        const {
-            target: { value }
-        } = e
+        const value = e.target.value
         this.state.messageInput = value
     }
 
