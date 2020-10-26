@@ -10,11 +10,23 @@ import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
 import { Lib } from 'lance-gg'
 import osc from 'osc/dist/osc-browser'
-import io from 'socket.io-client'
 
 class Room extends Component {
     constructor(props) {
         super(props)
+
+        console.log('Room constructor')
+        
+        this.state = {
+            router: this.props.router,
+            messageInput: '',
+            message: '',
+            stateText: ''
+        }
+    }
+
+    componentDidMount() {
+        console.log('Room mounted')
 
         const options = {
             traceLevel: Lib.Trace.TRACE_NONE,
@@ -31,67 +43,13 @@ class Room extends Component {
         this.gameEngine = new AppGameEngine(options)
         this.clientEngine = new AppClientEngine(this, this.gameEngine, options)
 
-        this.state = {
-            messageInput: '',
-            message: '',
-            stateText: ''
-        }
-    }
-
-    componentDidMount() {
-        const { router } = this.props
-
-        console.log('Room mounted')
-
-        this.localSocket = io(
-            `ws://${router.query.address}:${router.query.port}`
-        )
-
-        if (this.localSocket.connected) {
-            this.setState({
-                stateText: `Connected to ws://${router.query.address}:${router.query.port}.`
-            })
-        }
-        else {
-            this.setState({
-                stateText: `Failed to connect to ws://${router.query.address}:${router.query.port}.`
-            })
-        }
-        this.localSocket.on('connect', () => {
-            this.setState({
-                stateText: `Connected to ws://${router.query.address}:${router.query.port}.`
-            })
-        })
-
-        this.localSocket.on('reconnect', () => {
-            this.setState({
-                stateText: `Connected to ws://${router.query.address}:${router.query.port}.`
-            })
-        })
-        this.localSocket.on('disconnect', (reason) => {
-            if (reason === 'io server disconnect') {
-                this.setState({
-                    stateText: `Disconnected from ws://${router.query.address}:${router.query.port}.`
-                })
-            }
-            else {
-                this.setState({
-                    stateText: `Disconnected from ws://${router.query.address}:${router.query.port}. Attempting to reconnect.`
-                })
-            }
-
-        })
-        this.localSocket.on('message', (data) => {
-            console.log(data)
-        })
-
+        // ClientEngine options.autoConnect is true by default, so this calls connect()
         this.clientEngine.start()
     }
 
     componentWillUnmount() {
         console.log('Room will unmount')
         this.clientEngine.disconnect()
-        this.localSocket.close()
     }
 
     handleChange = (e) => {

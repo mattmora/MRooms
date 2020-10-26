@@ -7,7 +7,7 @@ import utilStyles from '../styles/utils.module.css'
 import { TextField } from '@material-ui/core'
 
 const defaultAddress = 'localhost'
-const defaultPort = 6789
+const defaultPort = ''
 
 class Index extends Component {
     constructor(props) {
@@ -110,7 +110,7 @@ class Index extends Component {
                     >
                         <TextField
                             id="port-field"
-                            label="Port"
+                            label="Port (optional)"
                             variant="outlined"
                             defaultValue={defaultPort}
                             onChange={this.handlePortChange}
