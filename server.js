@@ -7,14 +7,13 @@ const dev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 3000
 
 const app = require('express')()
-const server = require('http').Server(app)
+// const server = require('http').Server(app)
 
 const next = require('next')
 const nextApp = next({ dev })
 const nextHandler = nextApp.getRequestHandler()
 
 const socket = require('socket.io')
-const osc = require('osc')
 
 const AppGameEngine = require('./engine/AppGameEngine')
 const AppServerEngine = require('./engine/AppServerEngine')
@@ -26,7 +25,7 @@ nextApp.prepare().then(() => {
         return nextHandler(req, res)
     })
 
-    const requestHandler = server.listen(port, (err) => {
+    const requestHandler = app.listen(port, (err) => {
         if (err) throw err
         console.log(`> Ready on http://localhost:${port}`)
     })
