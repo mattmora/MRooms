@@ -42,6 +42,8 @@ class Room extends Component {
                 remoteObjBending: 1.0,
                 bendingIncrements: 1
             },
+            // Not necessary since lance should use this as default anyway
+            // but want to expose it here for clarity
             serverURL: window.location.origin
         }
         const qsOptions = querystring.parse(window.location.search)

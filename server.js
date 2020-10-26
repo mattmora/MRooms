@@ -8,19 +8,17 @@ const port = process.env.PORT || 3000
 
 const app = require('express')()
 const server = require('http').Server(app)
+const io = require('socket.io')(server)
 
 const next = require('next')
 const nextApp = next({ dev })
 const nextHandler = nextApp.getRequestHandler()
-
-const socket = require('socket.io')
 
 const AppGameEngine = require('./engine/AppGameEngine')
 const AppServerEngine = require('./engine/AppServerEngine')
 const { Lib } = require('lance-gg')
 
 nextApp.prepare().then(() => {
-
     app.get('*', (req, res) => {
         return nextHandler(req, res)
     })
@@ -30,10 +28,11 @@ nextApp.prepare().then(() => {
         console.log(`> Ready on http://localhost:${port}`)
     })
 
-    const io = socket(requestHandler)
-
     const gameEngine = new AppGameEngine({ traceLevel: Lib.Trace.TRACE_NONE })
-    const serverEngine = new AppServerEngine(io, gameEngine, { traceLevel: Lib.Trace.TRACE_NONE, timeoutInterval: 0 })
+    const serverEngine = new AppServerEngine(io, gameEngine, {
+        traceLevel: Lib.Trace.TRACE_NONE,
+        timeoutInterval: 0
+    })
 
-    serverEngine.start();
+    serverEngine.start()
 })
