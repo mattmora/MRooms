@@ -171,7 +171,7 @@ class Room extends Component {
         this.xebraState = new State({
             hostname: address,
             port: port,
-            secure: true,
+            secure: secure,
             supported_objects: SUPPORTED_OBJECTS
         })
         this.xebraState.connect()
