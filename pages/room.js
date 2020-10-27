@@ -14,6 +14,7 @@ import osc from 'osc/dist/osc-browser'
 import normalizePort from 'normalize-port'
 import { State, SUPPORTED_OBJECTS, CONNECTION_STATES } from 'xebra.js'
 
+const defaultChannel = 'fromBrowser'
 const defaultAddress = 'localhost' //'ws://localhost'
 const defaultPort = '8086'
 
@@ -35,7 +36,7 @@ class Room extends Component {
 
         this.state = {
             messageField: '',
-            channelField: '',
+            channelField: defaultChannel,
             enforceOSC: true,
             remoteMessage: '',
             addressField: defaultAddress,
@@ -223,7 +224,7 @@ class Room extends Component {
                             id="channelField"
                             label="Mira Channel"
                             variant="outlined"
-                            defaultValue="fromBrowser"
+                            defaultValue={defaultChannel}
                             onChange={this.handleChange}
                             onKeyPress={this.handleKeyPress}
                         />
