@@ -120,7 +120,23 @@ class Room extends Component {
                         args: [
                             {
                                 type: 'f',
-                                value: 440
+                                value: Math.random()
+                            },
+                            {
+                                type: 'f',
+                                value: Math.random()
+                            },
+                            {
+                                type: 'f',
+                                value: Math.random()
+                            },
+                            {
+                                type: 'f',
+                                value: Math.random()
+                            },
+                            {
+                                type: 'f',
+                                value: Math.random()
                             }
                         ]
                     })
@@ -158,7 +174,8 @@ class Room extends Component {
         this.xebraState.connect()
 
         this.xebraState.on('channel_message_received', (channel, message) => {
-            this.setState({ localSocketMessage: `${message} (from ${channel} channel)` })
+            console.log(message)
+            this.setState({ localSocketMessage: `${message.address} ${message.args} (from ${channel})` })
         })
 
         this.xebraState.on('connection_changed', () => {

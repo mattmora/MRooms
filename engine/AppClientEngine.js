@@ -49,19 +49,17 @@ class AppClientEngine extends ClientEngine {
                         }
                     }
 
-                    // XEbra
+                    // Xebra
+                    // Send the osc message as a json object, which will become a dict in max
                     if (this.app.xebraState != null) {
-                        this.app.xebraState.sendMessageToChannel(
-                            this.app.state.channel,
-                            message.address
-                        )
+                        this.app.xebraState.sendMessageToChannel(this.app.state.channel, message)
                     }
 
                     this.app.setState({
                         remoteMessage: message.address
                     })
 
-                    console.log(message.address)
+                    console.log(message)
                 })
 
                 this.socket.on('roomRequestResponse', (state) => {
