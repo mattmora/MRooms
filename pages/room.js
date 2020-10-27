@@ -3,9 +3,11 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { withRouter } from 'next/router'
 import Layout from '../components/layout'
+import TransportTime from '../components/transportTime'
 import utilStyles from '../styles/utils.module.css'
 import TextField from '@material-ui/core/TextField'
 import Divider from '@material-ui/core/Divider'
+import Card from '@material-ui/core/Card'
 
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
@@ -35,24 +37,25 @@ class Room extends Component {
         console.log('Room constructor')
 
         this.state = {
-            messageField: '',
-            channelField: defaultChannel,
+            message: '',
+            channel: defaultChannel,
             enforceOSC: true,
             remoteMessage: '',
-            addressField: defaultAddress,
-            portField: defaultPort,
+            address: defaultAddress,
+            port: defaultPort,
             localSocketMessage: '',
-            localSocketState: ''
+            localSocketState: '',
+            autoconnect: false
         }
 
+        this.gameEngine = null
+        this.clientEngine = null
         this.localSocket = null
         this.xebraState = null
     }
 
     componentDidMount() {
         console.log('Room mounted')
-
-        const { router } = this.props
 
         const options = {
             verbose: true,
@@ -76,8 +79,18 @@ class Room extends Component {
         this.gameEngine = new AppGameEngine(options)
         this.clientEngine = new AppClientEngine(this, this.gameEngine, options)
 
+        const { router } = this.props
+
         // ClientEngine options.autoConnect is true by default, so this calls connect()
         this.clientEngine.start()
+
+        Object.assign(this.state, router.query)
+
+        console.log(this.state)
+        if (this.state.autoconnect) {
+            console.log(router.query)
+            this.createXebraClient(this.state.address, normalizePort(this.state.port))
+        }
     }
 
     componentWillUnmount() {
@@ -99,8 +112,8 @@ class Room extends Component {
 
             // ================================================================
             // Handling for message text field
-            if (whichTextField === 'messageField' || whichTextField === 'channelField') {
-                const message = this.state.messageField
+            if (whichTextField === 'message' || whichTextField === 'channel') {
+                const message = this.state.message
                 if (message.startsWith('/') || !this.state.enforceOSC) {
                     const packet = osc.writePacket({
                         address: message,
@@ -111,17 +124,15 @@ class Room extends Component {
                             }
                         ]
                     })
-                    // Make sure the client socket exists
-                    if (this.clientEngine.socket)
-                        this.clientEngine.socket.emit('oscMessage', packet.buffer)
+                    this.clientEngine.sendOSCToServer(packet)
                 }
             }
 
             // ================================================================
             // Handling for address and port text fields
-            else if (whichTextField === 'addressField' || whichTextField === 'portField') {
-                const address = this.state.addressField
-                const port = this.state.portField
+            else if (whichTextField === 'address' || whichTextField === 'port') {
+                const address = this.state.address
+                const port = this.state.port
 
                 // this.createWebSocketClient(address, normalizePort(port))
                 this.createXebraClient(address, normalizePort(8086))
@@ -214,14 +225,14 @@ class Room extends Component {
                     </p>
                     <span>
                         <TextField
-                            id="messageField"
+                            id="message"
                             label="Message"
                             variant="outlined"
                             onChange={this.handleChange}
                             onKeyPress={this.handleKeyPress}
                         />{' '}
                         <TextField
-                            id="channelField"
+                            id="channel"
                             label="Mira Channel"
                             variant="outlined"
                             defaultValue={defaultChannel}
@@ -236,12 +247,13 @@ class Room extends Component {
                         wss://echo.websocket.org and no port for testing. Any message you or others
                         in the room send should be sent to the server, echoed back, and shown below. */}
                         Connect to mira in Max/MSP. Use mira.channel to send and receive arbitrary
-                        messages. A mira.frame must exist in the packet to establish a connection.
+                        messages. <br></br>A mira.frame must exist in the packet to establish a
+                        connection.
                     </p>
                     <span>
                         {' '}
                         <TextField
-                            id="addressField"
+                            id="address"
                             label="Address"
                             variant="outlined"
                             defaultValue={defaultAddress}
@@ -249,7 +261,7 @@ class Room extends Component {
                             onKeyPress={this.handleKeyPress}
                         />{' '}
                         <TextField
-                            id="portField"
+                            id="port"
                             label="Port (optional)"
                             variant="outlined"
                             defaultValue={defaultPort}
@@ -259,6 +271,8 @@ class Room extends Component {
                     </span>
                     <p>Connection: {this.state.localSocketState}</p>
                     <p>Received: {this.state.localSocketMessage}</p>
+                    <Divider />
+                    <TransportTime room={this} updateInterval={30}/>
                 </section>
             </Layout>
         )

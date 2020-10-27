@@ -4,19 +4,23 @@ import { withRouter } from 'next/router'
 
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
-import { TextField } from '@material-ui/core'
+import TextField from '@material-ui/core/TextField'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Checkbox from '@material-ui/core/Checkbox'
 
 class Index extends Component {
     constructor(props) {
         super(props)
 
         this.state = {
-            roomField: ''
+            roomField: '',
+            autoconnect: true
         }
     }
 
     handleChange = (e) => {
-        this.state[e.target.id] = e.target.value
+        if (e.target.id === 'roomField') this.state[e.target.id] = e.target.value
+        else if (e.target.id === 'autoconnect') this.state[e.target.id] = e.target.checked
     }
 
     handleKeyPress = (e) => {
@@ -29,7 +33,8 @@ class Index extends Component {
             router.push({
                 pathname: '/room',
                 query: {
-                    id: this.state.roomField
+                    id: this.state.roomField,
+                    autoconnect: this.state.autoconnect
                 }
             })
 
@@ -57,6 +62,27 @@ class Index extends Component {
                             variant="outlined"
                             onChange={this.handleChange}
                             onKeyPress={this.handleKeyPress}
+                        />
+                    </div>
+                    <p></p>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <FormControlLabel
+                            label="Automatically attempt to local server"
+                            labelPlacement="end"
+                            control={
+                                <Checkbox
+                                    id="autoconnect"
+                                    checked={this.state.autoconnect}
+                                    color="primary"
+                                    onChange={this.handleChange}
+                                />
+                            }
                         />
                     </div>
                 </section>

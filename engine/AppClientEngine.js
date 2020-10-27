@@ -2,7 +2,7 @@
 
 const { ClientEngine } = require('lance-gg/dist/client-module/lance-gg')
 const AppRenderer = require('./AppRenderer')
-const SyncClient = require('@ircam/sync/client')
+const { SyncClient } = require('@ircam/sync')
 const { Transport } = require('tone')
 const osc = require('osc/dist/osc-browser')
 
@@ -13,9 +13,9 @@ class AppClientEngine extends ClientEngine {
         super(gameEngine, options, AppRenderer)
 
         this.syncClient = null
+        this.transportSyncInterval = 120
         this.transportSyncCount = 0
         this.transport = Transport
-        this.room = null
         this.player = null
         this.players = []
         this.playersChanged = false
@@ -25,6 +25,8 @@ class AppClientEngine extends ClientEngine {
         this.gameEngine.on('client__postStep', this.postStepLogic.bind(this))
 
         this.app = app
+
+        console.log('Client engine constructor')
     }
 
     start() {
@@ -39,22 +41,44 @@ class AppClientEngine extends ClientEngine {
                     // Read the packet and do whatever with it
                     let message = osc.readPacket(packet, {})
 
-                    // if (this.app.localSocket != null) {
-                    //     if (this.app.localSocket.readyState === WebSocket.OPEN) {
-                    //         // Send the received packet to localhost
-                    //         this.app.localSocket.send(message.address)
-                    //     }
-                    // }
+                    // Generic WebSocket
+                    if (this.app.localSocket != null) {
+                        if (this.app.localSocket.readyState === WebSocket.OPEN) {
+                            // Send the received packet to localhost
+                            this.app.localSocket.send(message.address)
+                        }
+                    }
 
+                    // XEbra
                     if (this.app.xebraState != null) {
                         this.app.xebraState.sendMessageToChannel(
-                            this.app.state.channelField,
+                            this.app.state.channel,
                             message.address
                         )
                     }
 
+                    this.app.setState({
+                        remoteMessage: message.address
+                    })
+
                     console.log(message.address)
                 })
+
+                this.socket.on('roomRequestResponse', (state) => {
+                    if (state === 'success') {
+                        console.log(`Connected to room ${this.app.state.id}`)
+                        this.startSyncClient()
+                        this.transport.start()
+                        // this.app.setState({
+
+                        // })
+                    } else if (state === 'closed') {
+                        // this.app.setState({
+                        // })
+                    }
+                })
+
+                this.requestRoomFromServer(this.app.state.id)
             })
         })
     }
@@ -63,7 +87,14 @@ class AppClientEngine extends ClientEngine {
         super.disconnect()
     }
 
-    startSyncClient(socket) {
+    requestRoomFromServer(roomName) {
+        if (this.socket) {
+            console.log(`Requesting room ${roomName} from server`)
+            this.socket.emit('roomRequest', roomName)
+        }
+    }
+
+    startSyncClient() {
         const startTime = performance.now()
         this.syncClient = new SyncClient(() => {
             return (performance.now() - startTime) / 1000
@@ -105,24 +136,35 @@ class AppClientEngine extends ClientEngine {
         )
     }
 
-    assignToRoom(roomName) {
-        if (this.socket) {
-            this.gameEngine.setRoomParamsToDefault(roomName)
-            if (this.params.spectator != null) this.isSpectator = this.params.spectator
-            if (this.params.ringView != null) this.ringView = this.params.ringView
-            if (this.params.numRows != null) this.numRows = this.params.numRows
-            if (this.params.isLeader != null) this.isLeader = this.params.isLeader
-            this.socket.emit('assignToRoom', roomName, this.params)
-        }
+    sendOSCToServer(packet) {
+        // Make sure the socket exists
+        if (this.socket) this.socket.emit('oscMessage', this.app.state.id, packet.buffer)
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     /// SOUND HANDLING AND CLIENT LOGIC
 
     /// STEP
-    preStepLogic() {}
+    preStepLogic() {
+        // Sync the transport every so often
+        if (this.transport.state === 'started') {
+            if (this.transportSyncCount >= this.transportSyncInterval) {
+                this.transport.seconds = this.syncClient.getSyncTime()
+                this.transportSyncCount = 0
+                //console.log(client.transport.state);
+            }
+            this.transportSyncCount++
+        }
+    }
 
-    postStepLogic() {}
+    postStepLogic() {
+        if (this.syncClient !== null) {
+            if (this.transport.state !== 'started') {
+                this.transport.start()
+                this.transport.seconds = this.syncClient.getSyncTime()
+            }
+        }
+    }
 }
 
 module.exports = AppClientEngine
