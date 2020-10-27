@@ -4,7 +4,7 @@ module.exports = (phase, { defaultConfig }) => {
 
     if (phase === PHASE_DEVELOPMENT_SERVER) {
         return {
-            reactStrictMode: true,
+            reactStrictMode: false,
         }
     }
 

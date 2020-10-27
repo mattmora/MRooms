@@ -29,7 +29,7 @@ class Index extends Component {
             router.push({
                 pathname: '/room',
                 query: {
-                    room: this.state.roomField,
+                    id: this.state.roomField
                 }
             })
 

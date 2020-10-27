@@ -34,17 +34,23 @@ class AppClientEngine extends ClientEngine {
     connect(options = {}) {
         return super.connect().then(() => {
             return new Promise((resolve, reject) => {
-
                 // Receiving an osc message from the remote server
                 this.socket.on('oscResponse', (packet) => {
                     // Read the packet and do whatever with it
                     let message = osc.readPacket(packet, {})
 
-                    if (this.app.localSocket != null) {
-                        if (this.app.localSocket.readyState === WebSocket.OPEN) {
-                            // Send the received packet to localhost
-                            this.app.localSocket.send(message.address)
-                        }
+                    // if (this.app.localSocket != null) {
+                    //     if (this.app.localSocket.readyState === WebSocket.OPEN) {
+                    //         // Send the received packet to localhost
+                    //         this.app.localSocket.send(message.address)
+                    //     }
+                    // }
+
+                    if (this.app.xebraState != null) {
+                        this.app.xebraState.sendMessageToChannel(
+                            this.app.state.channelField,
+                            message.address
+                        )
                     }
 
                     console.log(message.address)
@@ -90,12 +96,7 @@ class AppClientEngine extends ClientEngine {
                         //console.log('[pong] - id: %s, clientPingTime: %s, serverPingTime: %s, serverPongTime: %s',
                         //pingId, clientPingTime, serverPingTime, serverPongTime)
 
-                        callback(
-                            pingId,
-                            clientPingTime,
-                            serverPingTime,
-                            serverPongTime
-                        )
+                        callback(pingId, clientPingTime, serverPingTime, serverPongTime)
                     }
                 })
             },
@@ -107,13 +108,10 @@ class AppClientEngine extends ClientEngine {
     assignToRoom(roomName) {
         if (this.socket) {
             this.gameEngine.setRoomParamsToDefault(roomName)
-            if (this.params.spectator != null)
-                this.isSpectator = this.params.spectator
-            if (this.params.ringView != null)
-                this.ringView = this.params.ringView
+            if (this.params.spectator != null) this.isSpectator = this.params.spectator
+            if (this.params.ringView != null) this.ringView = this.params.ringView
             if (this.params.numRows != null) this.numRows = this.params.numRows
-            if (this.params.isLeader != null)
-                this.isLeader = this.params.isLeader
+            if (this.params.isLeader != null) this.isLeader = this.params.isLeader
             this.socket.emit('assignToRoom', roomName, this.params)
         }
     }

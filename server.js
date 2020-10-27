@@ -30,10 +30,10 @@ nextApp.prepare().then(() => {
     const io = socket.listen(server)
 
     const gameEngine = new AppGameEngine({ traceLevel: Lib.Trace.TRACE_NONE })
-const serverEngine = new AppServerEngine(io, gameEngine, {
-    traceLevel: Lib.Trace.TRACE_NONE,
-    timeoutInterval: 0
-})
+    const serverEngine = new AppServerEngine(io, gameEngine, {
+        traceLevel: Lib.Trace.TRACE_NONE,
+        timeoutInterval: 0
+    })
 
-serverEngine.start()
+    serverEngine.start()
 })
