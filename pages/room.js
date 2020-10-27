@@ -151,7 +151,7 @@ class Room extends Component {
                 const port = this.state.port
 
                 // this.createWebSocketClient(address, normalizePort(port))
-                this.createXebraClient(address, normalizePort(8086))
+                this.createXebraClient(address, normalizePort(port))
             }
 
             e.preventDefault()
