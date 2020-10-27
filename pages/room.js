@@ -16,7 +16,7 @@ import osc from 'osc/dist/osc-browser'
 import normalizePort from 'normalize-port'
 import { State, SUPPORTED_OBJECTS, CONNECTION_STATES } from 'xebra.js'
 
-const defaultChannel = 'fromBrowser'
+const defaultChannel = 'channel1'
 const defaultAddress = 'localhost' //'ws://localhost'
 const defaultPort = '8086'
 
