@@ -184,6 +184,8 @@ class Room extends Component {
                     this.setState({
                         localSocketMessage: `OSC message: ${message.address} ${message.args} (from ${channel})`
                     })
+                    const packet = osc.writePacket(message)
+                    this.clientEngine.sendOSCToServer(packet)
                 } else {
                     this.setState({
                         localSocketMessage: `Non-OSC message: ${message} (from ${channel})`
