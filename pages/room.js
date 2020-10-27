@@ -162,20 +162,40 @@ class Room extends Component {
         if (this.xebraState !== null) this.xebraState.close()
 
         let url
-        //wss://
+        if (address.startsWith('ws://')) address = address.slice(5)
+        const secure = address.startsWith('wss://')
+        if (secure) address = address.slice(6)
         if (port) url = `${address}:${port}`
         else url = address
 
         this.xebraState = new State({
             hostname: address,
             port: port,
+            secure: true,
             supported_objects: SUPPORTED_OBJECTS
         })
         this.xebraState.connect()
 
         this.xebraState.on('channel_message_received', (channel, message) => {
+            console.log(channel)
             console.log(message)
-            this.setState({ localSocketMessage: `${message.address} ${message.args} (from ${channel})` })
+            if (message != null) {
+                if (osc.isValidMessage(message)) {
+                    this.setState({
+                        localSocketMessage: `OSC message: ${message.address} ${message.args} (from ${channel})`
+                    })
+                } else {
+                    this.setState({
+                        localSocketMessage: `Non-OSC message: ${message} (from ${channel})`
+                    })
+                }
+            }
+            else {
+                this.setState({
+                    localSocketMessage: `Non-OSC message: ${channel}`
+                })
+            }
+            
         })
 
         this.xebraState.on('connection_changed', () => {
@@ -289,7 +309,7 @@ class Room extends Component {
                     <p>Connection: {this.state.localSocketState}</p>
                     <p>Received: {this.state.localSocketMessage}</p>
                     <Divider />
-                    <TransportTime room={this} updateInterval={30}/>
+                    <TransportTime room={this} updateInterval={30} />
                 </section>
             </Layout>
         )
