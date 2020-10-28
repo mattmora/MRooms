@@ -42,12 +42,12 @@ class AppClientEngine extends ClientEngine {
                     let message = osc.readPacket(packet, {})
 
                     // Generic WebSocket
-                    if (this.app.localSocket != null) {
-                        if (this.app.localSocket.readyState === WebSocket.OPEN) {
-                            // Send the received packet to localhost
-                            this.app.localSocket.send(message.address)
-                        }
-                    }
+                    // if (this.app.localSocket != null) {
+                    //     if (this.app.localSocket.readyState === WebSocket.OPEN) {
+                    //         // Send the received packet to localhost
+                    //         this.app.localSocket.send(message.address)
+                    //     }
+                    // }
 
                     // Xebra
                     // Send the osc message as a json object, which will become a dict in max
@@ -56,7 +56,7 @@ class AppClientEngine extends ClientEngine {
                     }
 
                     this.app.setState({
-                        remoteMessage: message.address
+                        remoteMessage: `${message.address} ${message.args}`
                     })
 
                     console.log(message)

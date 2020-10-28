@@ -7,6 +7,8 @@ import utilStyles from '../styles/utils.module.css'
 import TextField from '@material-ui/core/TextField'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
+import Grid from '@material-ui/core/Grid'
+import Button from '@material-ui/core/Button'
 
 class Index extends Component {
     constructor(props) {
@@ -19,27 +21,34 @@ class Index extends Component {
     }
 
     handleChange = (e) => {
-        if (e.target.id === 'roomField') this.state[e.target.id] = e.target.value
-        else if (e.target.id === 'autoconnect') this.state[e.target.id] = e.target.checked
+        if (e.target.id === 'roomField') {
+            this.state[e.target.id] = e.target.value
+        } else if (e.target.id === 'autoconnect') {
+            console.log(e.target.checked)
+            this.state[e.target.id] = e.target.checked
+        }
     }
 
     handleKeyPress = (e) => {
         console.log(`Pressed keyCode ${e.key}`)
 
-        const { router } = this.props
-
-        if (e.key === 'Enter' && this.state.roomField) {
-            // Go to the room page
-            router.push({
-                pathname: '/room',
-                query: {
-                    id: this.state.roomField,
-                    autoconnect: this.state.autoconnect
-                }
-            })
-
+        if (e.key === 'Enter') {
+            this.enterRoom()
             e.preventDefault()
         }
+    }
+
+    enterRoom() {
+        if (!this.state.roomField) return
+        const { router } = this.props
+        // Go to the room page
+        router.push({
+            pathname: '/room',
+            query: {
+                id: this.state.roomField,
+                autoconnect: this.state.autoconnect
+            }
+        })
     }
 
     render() {
@@ -49,42 +58,60 @@ class Index extends Component {
                     <title>{siteTitle}</title>
                 </Head>
                 <section className={utilStyles.headingMd}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
+                    <Grid
+                        container
+                        spacing={1}
+                        direction="column"
+                        alignItems="center"
+                        justify="center"
                     >
-                        <TextField
-                            id="roomField"
-                            label="Room"
-                            variant="outlined"
-                            onChange={this.handleChange}
-                            onKeyPress={this.handleKeyPress}
-                        />
-                    </div>
-                    <p></p>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <FormControlLabel
-                            label="Automatically attempt to local server"
-                            labelPlacement="end"
-                            control={
-                                <Checkbox
-                                    id="autoconnect"
-                                    checked={this.state.autoconnect}
-                                    color="primary"
-                                    onChange={this.handleChange}
-                                />
-                            }
-                        />
-                    </div>
+                        <Grid item xs="auto">
+                            <Grid container spacing={1} alignItems="center" justify="center">
+                                <Grid item xs={8}>
+                                    <TextField
+                                        id="roomField"
+                                        label="Room"
+                                        variant="outlined"
+                                        fullWidth={true}
+                                        onChange={this.handleChange}
+                                        onKeyPress={this.handleKeyPress}
+                                    />
+                                </Grid>
+                                <Grid item xs="auto">
+                                    <Button
+                                        id="enterButton"
+                                        variant="outlined"
+                                        color="primary"
+                                        size="large"
+                                        fullWidth={true}
+                                        onClick={() => {
+                                            this.enterRoom()
+                                        }}
+                                    >
+                                        Enter
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                        <Grid item xs="auto">
+                            <Grid container spacing={1} alignItems="center" justify="center">
+                                <Grid item xs="auto">
+                                    <FormControlLabel
+                                        label="Automatically attempt to connect to local server"
+                                        labelPlacement="end"
+                                        control={
+                                            <Checkbox
+                                                id="autoconnect"
+                                                color="primary"
+                                                defaultChecked
+                                                onChange={this.handleChange}
+                                            />
+                                        }
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
                 </section>
             </Layout>
         )

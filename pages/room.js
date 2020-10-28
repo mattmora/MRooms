@@ -5,7 +5,9 @@ import { withRouter } from 'next/router'
 import Layout from '../components/layout'
 import TransportTime from '../components/transportTime'
 import utilStyles from '../styles/utils.module.css'
+import Grid from '@material-ui/core/Grid'
 import TextField from '@material-ui/core/TextField'
+import Button from '@material-ui/core/Button'
 import Divider from '@material-ui/core/Divider'
 import Card from '@material-ui/core/Card'
 
@@ -87,7 +89,7 @@ class Room extends Component {
         Object.assign(this.state, router.query)
 
         console.log(this.state)
-        if (this.state.autoconnect) {
+        if (this.state.autoconnect === 'true') {
             console.log(router.query)
             this.createXebraClient(this.state.address, normalizePort(this.state.port))
         }
@@ -101,7 +103,7 @@ class Room extends Component {
     }
 
     handleChange = (e) => {
-        this.state[e.target.id] = e.target.value
+        this.state[e.target.id] = e.target.value.trim()
     }
 
     handleKeyPress = (e) => {
@@ -113,49 +115,56 @@ class Room extends Component {
             // ================================================================
             // Handling for message text field
             if (whichTextField === 'message' || whichTextField === 'channel') {
-                const message = this.state.message
-                if (message.startsWith('/') || !this.state.enforceOSC) {
-                    const packet = osc.writePacket({
-                        address: message,
-                        args: [
-                            {
-                                type: 'f',
-                                value: Math.random()
-                            },
-                            {
-                                type: 'f',
-                                value: Math.random()
-                            },
-                            {
-                                type: 'f',
-                                value: Math.random()
-                            },
-                            {
-                                type: 'f',
-                                value: Math.random()
-                            },
-                            {
-                                type: 'f',
-                                value: Math.random()
-                            }
-                        ]
-                    })
-                    this.clientEngine.sendOSCToServer(packet)
-                }
+                this.sendMessage()
             }
 
             // ================================================================
             // Handling for address and port text fields
             else if (whichTextField === 'address' || whichTextField === 'port') {
-                const address = this.state.address
-                const port = this.state.port
-
-                // this.createWebSocketClient(address, normalizePort(port))
-                this.createXebraClient(address, normalizePort(port))
+                this.attemptConnection()
             }
 
             e.preventDefault()
         }
+    }
+
+    sendMessage() {
+        const message = this.state.message
+        if (message.startsWith('/') || !this.state.enforceOSC) {
+            const split = message.split(/ (.+)/)
+            const address = split[0]
+            const values = split[1].split(',')
+            let args = []
+            for (let v of values) {
+                // Send anything that's not a number as a string
+                if (isNaN(v)) {
+                    args.push({
+                        type: 's',
+                        value: v.trim()
+                    })
+                }
+                // Send numbers as floats
+                else {
+                    args.push({
+                        type: 'f',
+                        value: Number(v)
+                    })
+                }
+            }
+            const packet = osc.writePacket({
+                address: address,
+                args: args
+            })
+            this.clientEngine.sendOSCToServer(packet)
+        }
+    }
+
+    attemptConnection() {
+        const address = this.state.address
+        const port = this.state.port
+
+        // this.createWebSocketClient(address, normalizePort(port))
+        this.createXebraClient(address, normalizePort(port))
     }
 
     createXebraClient(address, port) {
@@ -191,13 +200,11 @@ class Room extends Component {
                         localSocketMessage: `Non-OSC message: ${message} (from ${channel})`
                     })
                 }
-            }
-            else {
+            } else {
                 this.setState({
                     localSocketMessage: `Non-OSC message: ${channel}`
                 })
             }
-            
         })
 
         this.xebraState.on('connection_changed', () => {
@@ -258,27 +265,50 @@ class Room extends Component {
                 <h1>{router.query.id}</h1>
                 <section className={utilStyles.headingMd}>
                     <p>
-                        Enter a message starting with '/' to send to everyone in this room and to a
-                        mira.channel object you're connected to. Messages from others in the room
-                        will also be sent to the mira.channel object.
+                        Enter an message to send to everyone in this room and to a mira.channel
+                        object you're connected to. <br></br>The format of a message is an address
+                        starting with '/', followed by a space, followed by argument values
+                        separated by commas. <br></br>Ex.{' '}
+                        <i>/hello 1,2, spaces and strings are okay!, 3,4</i>
+                        <br></br>Messages from others in the room will also be sent to the
+                        mira.channel object.
                     </p>
-                    <span>
-                        <TextField
-                            id="message"
-                            label="Message"
-                            variant="outlined"
-                            onChange={this.handleChange}
-                            onKeyPress={this.handleKeyPress}
-                        />{' '}
-                        <TextField
-                            id="channel"
-                            label="Mira Channel"
-                            variant="outlined"
-                            defaultValue={defaultChannel}
-                            onChange={this.handleChange}
-                            onKeyPress={this.handleKeyPress}
-                        />
-                    </span>
+                    <Grid container spacing={1} alignItems="center">
+                        <Grid item xs={6}>
+                            <TextField
+                                id="message"
+                                label="Message"
+                                variant="outlined"
+                                fullWidth={true}
+                                onChange={this.handleChange}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                        <Grid item xs={3}>
+                            <TextField
+                                id="channel"
+                                label="Mira Channel"
+                                variant="outlined"
+                                fullWidth={true}
+                                defaultValue={defaultChannel}
+                                onChange={this.handleChange}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                        <Grid item xs={2}>
+                            <Button
+                                id="sendButton"
+                                variant="outlined"
+                                color="primary"
+                                size="large"
+                                onClick={() => {
+                                    this.sendMessage()
+                                }}
+                            >
+                                Send
+                            </Button>
+                        </Grid>
+                    </Grid>
                     <p>Received: {this.state.remoteMessage}</p>
                     <Divider />
                     <p>
@@ -289,25 +319,43 @@ class Room extends Component {
                         messages. <br></br>A mira.frame must exist in the packet to establish a
                         connection.
                     </p>
-                    <span>
-                        {' '}
-                        <TextField
-                            id="address"
-                            label="Address"
-                            variant="outlined"
-                            defaultValue={defaultAddress}
-                            onChange={this.handleChange}
-                            onKeyPress={this.handleKeyPress}
-                        />{' '}
-                        <TextField
-                            id="port"
-                            label="Port (optional)"
-                            variant="outlined"
-                            defaultValue={defaultPort}
-                            onChange={this.handleChange}
-                            onKeyPress={this.handleKeyPress}
-                        />{' '}
-                    </span>
+                    <Grid container spacing={1} alignItems="center">
+                        <Grid item xs={4}>
+                            <TextField
+                                id="address"
+                                label="Address"
+                                variant="outlined"
+                                fullWidth={true}
+                                defaultValue={defaultAddress}
+                                onChange={this.handleChange}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                        <Grid item xs={4}>
+                            <TextField
+                                id="port"
+                                label="Port (optional)"
+                                variant="outlined"
+                                fullWidth={true}
+                                defaultValue={defaultPort}
+                                onChange={this.handleChange}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                        <Grid item xs={2}>
+                            <Button
+                                id="connectButton"
+                                variant="outlined"
+                                color="primary"
+                                size="large"
+                                onClick={() => {
+                                    this.attemptConnection()
+                                }}
+                            >
+                                Connect
+                            </Button>
+                        </Grid>
+                    </Grid>
                     <p>Connection: {this.state.localSocketState}</p>
                     <p>Received: {this.state.localSocketMessage}</p>
                     <Divider />
