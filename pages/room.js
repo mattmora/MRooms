@@ -128,12 +128,14 @@ class Room extends Component {
         }
     }
 
-    sendMessage() {
+    sendMessage = () => {
         const message = this.state.message
+        console.log(`Sending message ${message}`)
         if (message.startsWith('/') || !this.state.enforceOSC) {
             const split = message.split(/ (.+)/)
             const address = split[0]
-            const values = split[1].split(',')
+            let values = []
+            if (split[1] !== undefined) values = split[1].split(',')
             let args = []
             for (let v of values) {
                 // Send anything that's not a number as a string
@@ -159,7 +161,7 @@ class Room extends Component {
         }
     }
 
-    attemptConnection() {
+    attemptConnection = () => {
         const address = this.state.address
         const port = this.state.port
 
@@ -301,9 +303,7 @@ class Room extends Component {
                                 variant="outlined"
                                 color="primary"
                                 size="large"
-                                onClick={() => {
-                                    this.sendMessage()
-                                }}
+                                onClick={this.sendMessage}
                             >
                                 Send
                             </Button>
@@ -348,9 +348,7 @@ class Room extends Component {
                                 variant="outlined"
                                 color="primary"
                                 size="large"
-                                onClick={() => {
-                                    this.attemptConnection()
-                                }}
+                                onClick={this.attemptConnection}
                             >
                                 Connect
                             </Button>

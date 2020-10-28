@@ -5,6 +5,7 @@ const AppRenderer = require('./AppRenderer')
 const { SyncClient } = require('@ircam/sync')
 const { Transport } = require('tone')
 const osc = require('osc/dist/osc-browser')
+const { CONNECTION_STATES } = require('xebra.js')
 
 class AppClientEngine extends ClientEngine {
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,7 @@ class AppClientEngine extends ClientEngine {
                     // Xebra
                     // Send the osc message as a json object, which will become a dict in max
                     if (this.app.xebraState != null) {
+                        if (this.app.xebraState.connectionState === CONNECTION_STATES.CONNECTED)
                         this.app.xebraState.sendMessageToChannel(this.app.state.channel, message)
                     }
 
