@@ -9,7 +9,6 @@ import Grid from '@material-ui/core/Grid'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Divider from '@material-ui/core/Divider'
-import Card from '@material-ui/core/Card'
 
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
@@ -262,7 +261,7 @@ class Room extends Component {
         return (
             <Layout>
                 <Head>
-                    <title>Room {router.query.id}</title>
+                    <title>UtilOSC Room {router.query.id}</title>
                 </Head>
                 <h1>{router.query.id}</h1>
                 <section className={utilStyles.headingMd}>

@@ -9,6 +9,11 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
 import Grid from '@material-ui/core/Grid'
 import Button from '@material-ui/core/Button'
+import Card from '@material-ui/core/Card'
+import CardContent from '@material-ui/core/CardContent'
+import CardMedia from '@material-ui/core/CardMedia'
+import Typography from '@material-ui/core/Typography'
+import Divider from '@material-ui/core/Divider'
 
 class Index extends Component {
     constructor(props) {
@@ -57,62 +62,96 @@ class Index extends Component {
                 <Head>
                     <title>{siteTitle}</title>
                 </Head>
-                <section className={utilStyles.headingMd}>
-                    <Grid
-                        container
-                        spacing={1}
-                        direction="column"
-                        alignItems="center"
-                        justify="center"
-                    >
-                        <Grid item xs="auto">
-                            <Grid container spacing={1} alignItems="center" justify="center">
-                                <Grid item xs={8}>
-                                    <TextField
-                                        id="roomField"
-                                        label="Room"
-                                        variant="outlined"
-                                        fullWidth={true}
-                                        onChange={this.handleChange}
-                                        onKeyPress={this.handleKeyPress}
-                                    />
-                                </Grid>
-                                <Grid item xs="auto">
-                                    <Button
-                                        id="enterButton"
-                                        variant="outlined"
-                                        color="primary"
-                                        size="large"
-                                        fullWidth={true}
-                                        onClick={() => {
-                                            this.enterRoom()
-                                        }}
-                                    >
-                                        Enter
-                                    </Button>
-                                </Grid>
+
+                <Divider />
+                <p></p>
+                <Grid container spacing={1} direction="column" alignItems="center" justify="center">
+                    <Grid item xs="auto">
+                        <Grid container spacing={1} alignItems="center" justify="center">
+                            <Grid item xs={8}>
+                                <TextField
+                                    id="roomField"
+                                    label="Room"
+                                    variant="outlined"
+                                    fullWidth={true}
+                                    onChange={this.handleChange}
+                                    onKeyPress={this.handleKeyPress}
+                                />
                             </Grid>
-                        </Grid>
-                        <Grid item xs="auto">
-                            <Grid container spacing={1} alignItems="center" justify="center">
-                                <Grid item xs="auto">
-                                    <FormControlLabel
-                                        label="Automatically attempt to connect to local server"
-                                        labelPlacement="end"
-                                        control={
-                                            <Checkbox
-                                                id="autoconnect"
-                                                color="primary"
-                                                defaultChecked
-                                                onChange={this.handleChange}
-                                            />
-                                        }
-                                    />
-                                </Grid>
+                            <Grid item xs="auto">
+                                <Button
+                                    id="enterButton"
+                                    variant="outlined"
+                                    color="primary"
+                                    size="large"
+                                    fullWidth={true}
+                                    onClick={() => {
+                                        this.enterRoom()
+                                    }}
+                                >
+                                    Enter
+                                </Button>
                             </Grid>
                         </Grid>
                     </Grid>
-                </section>
+                    <Grid item xs="auto">
+                        <Grid container spacing={1} alignItems="center" justify="center">
+                            <Grid item xs="auto">
+                                <FormControlLabel
+                                    label="Automatically attempt to connect to local server"
+                                    labelPlacement="end"
+                                    control={
+                                        <Checkbox
+                                            id="autoconnect"
+                                            color="primary"
+                                            defaultChecked
+                                            onChange={this.handleChange}
+                                        />
+                                    }
+                                />
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Card>
+                            <CardContent>
+                                <Typography gutterBottom variant="h5" component="h2">
+                                    How to use with Max:
+                                </Typography>
+                                <Typography
+                                    gutterBottom
+                                    variant="body2"
+                                    color="textSecondary"
+                                    component="p"
+                                >
+                                    UtilOSC can connect with Max through the mira.channel object
+                                    from the Max package{' '}
+                                    <a href="https://github.com/Cycling74/miraweb">Miraweb</a>.
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary" component="p">
+                                    Below is a minimal patch that can send, receive, and format
+                                    messages. Note that a mira.frame object is required because it
+                                    creates a WebSocket server for UtilOSC to connect to.
+                                </Typography>
+                            </CardContent>
+                            <CardMedia
+                                component="img"
+                                alt="Example Max Patch"
+                                image="./images/examplepatch.png"
+                                title="Example Max Patch"
+                            />
+                        </Card>
+                    </Grid>
+                </Grid>
+                <p></p>
+                <Divider />
+                <p></p>
+                <Grid container spacing={1} direction="column" alignItems="center" justify="center">
+                    <Grid item xs={6}>
+                        <Typography><a href="https://github.com/mattmora/UtilOSC">Github</a></Typography>
+                        <p></p>
+                    </Grid>
+                </Grid>
             </Layout>
         )
     }
