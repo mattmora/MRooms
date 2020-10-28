@@ -266,7 +266,7 @@ class Room extends Component {
                 <h1>{router.query.id}</h1>
                 <section className={utilStyles.headingMd}>
                     <p>
-                        Enter an message to send to everyone in this room and to a mira.channel
+                        Enter a message to send to everyone in this room and to a mira.channel
                         object you're connected to. <br></br>The format of a message is an address
                         starting with '/', followed by a space, followed by argument values
                         separated by commas. <br></br>Ex.{' '}
