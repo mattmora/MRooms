@@ -4,11 +4,16 @@ import Link from 'next/link'
 import { withRouter } from 'next/router'
 import Layout from '../components/layout'
 import TransportTime from '../components/transportTime'
+import UserList from '../components/userList'
 import utilStyles from '../styles/utils.module.css'
+
 import Grid from '@material-ui/core/Grid'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Divider from '@material-ui/core/Divider'
+import Typography from '@material-ui/core/Typography'
+import Card from '@material-ui/core/Card'
+import CardContent from '@material-ui/core/CardContent'
 
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
@@ -17,6 +22,23 @@ import osc from 'osc/dist/osc-browser'
 import normalizePort from 'normalize-port'
 import { State, SUPPORTED_OBJECTS, CONNECTION_STATES } from 'xebra.js'
 
+const defaultRoomName = 'Default'
+const defaultUserNames = [
+    'Jeff',
+    'Mike',
+    'Matt',
+    'Josh',
+    'Jason',
+    'Abbie',
+    'Emily',
+    'Yue',
+    'Gulli',
+    'Liam',
+    'Nick',
+    'Nikitas',
+    'Theo',
+    'Claire'
+]
 const defaultChannel = 'channel1'
 const defaultAddress = 'localhost' //'ws://localhost'
 const defaultPort = '8086'
@@ -38,6 +60,9 @@ class Room extends Component {
         console.log('Room constructor')
 
         this.state = {
+            id: '',
+            username: '',
+            autoconnect: true,
             message: '',
             channel: defaultChannel,
             enforceOSC: true,
@@ -46,7 +71,9 @@ class Room extends Component {
             port: defaultPort,
             localSocketMessage: '',
             localSocketState: '',
-            autoconnect: false
+            autoconnect: false,
+            users: [],
+            userFilters: {} // Keys are the elements of users array, values are { send: bool, receive: bool }
         }
 
         this.gameEngine = null
@@ -84,6 +111,9 @@ class Room extends Component {
 
         // ClientEngine options.autoConnect is true by default, so this calls connect()
         this.clientEngine.start()
+
+        this.state.id = defaultRoomName,
+        this.state.username = defaultUserNames[Math.floor(Math.random() * defaultUserNames.length)],
 
         Object.assign(this.state, router.query)
 
@@ -256,108 +286,118 @@ class Room extends Component {
     }
 
     render() {
-        const { router } = this.props
-
         return (
             <Layout>
-                <Head>
-                    <title>UtilOSC Room {router.query.id}</title>
-                </Head>
-                <h1>{router.query.id}</h1>
-                <section className={utilStyles.headingMd}>
-                    <p>
-                        Enter a message to send to everyone in this room and to a mira.channel
-                        object you're connected to. <br></br>The format of a message is an address
-                        starting with '/', followed by a space, followed by argument values
-                        separated by commas. <br></br>Ex.{' '}
-                        <i>/hello 1,2, spaces and strings are okay!, 3,4</i>
-                        <br></br>Messages from others in the room will also be sent to the
-                        mira.channel object.
-                    </p>
-                    <Grid container spacing={1} alignItems="center">
-                        <Grid item xs={6}>
-                            <TextField
-                                id="message"
-                                label="Message"
-                                variant="outlined"
-                                fullWidth={true}
-                                onChange={this.handleChange}
-                                onKeyPress={this.handleKeyPress}
-                            />
-                        </Grid>
-                        <Grid item xs={3}>
-                            <TextField
-                                id="channel"
-                                label="Mira Channel"
-                                variant="outlined"
-                                fullWidth={true}
-                                defaultValue={defaultChannel}
-                                onChange={this.handleChange}
-                                onKeyPress={this.handleKeyPress}
-                            />
-                        </Grid>
-                        <Grid item xs={2}>
-                            <Button
-                                id="sendButton"
-                                variant="outlined"
-                                color="primary"
-                                size="large"
-                                onClick={this.sendMessage}
-                            >
-                                Send
-                            </Button>
-                        </Grid>
+                <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={7}>
+                        <Head>
+                            <title>UtilOSC Room {this.state.id}</title>
+                        </Head>
+                        <h1>
+                            {this.state.id} : {this.state.username}
+                        </h1>
+                        <p>
+                            Enter a message to send to everyone in this room and to a mira.channel
+                            object you're connected to. <br></br>The format of a message is an
+                            address starting with '/', followed by a space, followed by argument
+                            values separated by commas. <br></br>Ex.{' '}
+                            <i>/hello 1,2, spaces and strings are okay!, 3,4</i>
+                            <br></br>Messages from others in the room will also be sent to the
+                            mira.channel object.
+                        </p>
                     </Grid>
-                    <p>Received: {this.state.remoteMessage}</p>
-                    <Divider />
-                    <p>
-                        {/* Enter a WebSocket server to connect to. <br></br>Try
+                    <Grid item xs={5}>
+                        <Typography>Users (Toggle sends and receives)</Typography>
+                        <Card variant="outlined">
+                            <CardContent>
+                                <UserList room={this} />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+                <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={6}>
+                        <TextField
+                            id="message"
+                            label="Message"
+                            variant="outlined"
+                            fullWidth={true}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
+                        />
+                    </Grid>
+                    <Grid item xs={3}>
+                        <TextField
+                            id="channel"
+                            label="Mira Channel"
+                            variant="outlined"
+                            fullWidth={true}
+                            defaultValue={defaultChannel}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
+                        />
+                    </Grid>
+                    <Grid item xs={2}>
+                        <Button
+                            id="sendButton"
+                            variant="outlined"
+                            color="primary"
+                            size="large"
+                            onClick={this.sendMessage}
+                        >
+                            Send
+                        </Button>
+                    </Grid>
+                </Grid>
+                <p>Received: {this.state.remoteMessage}</p>
+                <Divider />
+                <p>
+                    {/* Enter a WebSocket server to connect to. <br></br>Try
                         wss://echo.websocket.org and no port for testing. Any message you or others
                         in the room send should be sent to the server, echoed back, and shown below. */}
-                        Connect to mira in Max/MSP. Use mira.channel to send and receive arbitrary
-                        messages. <br></br>A mira.frame must exist in the packet to establish a
-                        connection.
-                    </p>
-                    <Grid container spacing={1} alignItems="center">
-                        <Grid item xs={4}>
-                            <TextField
-                                id="address"
-                                label="Address"
-                                variant="outlined"
-                                fullWidth={true}
-                                defaultValue={defaultAddress}
-                                onChange={this.handleChange}
-                                onKeyPress={this.handleKeyPress}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <TextField
-                                id="port"
-                                label="Port (optional)"
-                                variant="outlined"
-                                fullWidth={true}
-                                defaultValue={defaultPort}
-                                onChange={this.handleChange}
-                                onKeyPress={this.handleKeyPress}
-                            />
-                        </Grid>
-                        <Grid item xs={2}>
-                            <Button
-                                id="connectButton"
-                                variant="outlined"
-                                color="primary"
-                                size="large"
-                                onClick={this.attemptConnection}
-                            >
-                                Connect
-                            </Button>
-                        </Grid>
+                    Connect to mira in Max/MSP. Use mira.channel to send and receive arbitrary
+                    messages. <br></br>A mira.frame must exist in the packet to establish a
+                    connection.
+                </p>
+                <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={4}>
+                        <TextField
+                            id="address"
+                            label="Address"
+                            variant="outlined"
+                            fullWidth={true}
+                            defaultValue={defaultAddress}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
+                        />
                     </Grid>
-                    <p>Connection: {this.state.localSocketState}</p>
-                    <p>Received: {this.state.localSocketMessage}</p>
-                    <Divider />
-                    <TransportTime room={this} updateInterval={30} />
-                </section>
+                    <Grid item xs={4}>
+                        <TextField
+                            id="port"
+                            label="Port (optional)"
+                            variant="outlined"
+                            fullWidth={true}
+                            defaultValue={defaultPort}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
+                        />
+                    </Grid>
+                    <Grid item xs={2}>
+                        <Button
+                            id="connectButton"
+                            variant="outlined"
+                            color="primary"
+                            size="large"
+                            onClick={this.attemptConnection}
+                        >
+                            Connect
+                        </Button>
+                    </Grid>
+                </Grid>
+                <p>Connection: {this.state.localSocketState}</p>
+                <p>Received: {this.state.localSocketMessage}</p>
+                <Divider />
+                <TransportTime room={this} updateInterval={30} />
             </Layout>
         )
     }

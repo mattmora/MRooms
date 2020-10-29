@@ -20,17 +20,18 @@ class Index extends Component {
         super(props)
 
         this.state = {
-            roomField: '',
+            room: '',
+            username: '',
             autoconnect: true
         }
     }
 
     handleChange = (e) => {
-        if (e.target.id === 'roomField') {
-            this.state[e.target.id] = e.target.value
-        } else if (e.target.id === 'autoconnect') {
+        if (e.target.id === 'autoconnect') {
             console.log(e.target.checked)
             this.state[e.target.id] = e.target.checked
+        } else {
+            this.state[e.target.id] = e.target.value
         }
     }
 
@@ -44,13 +45,15 @@ class Index extends Component {
     }
 
     enterRoom() {
-        if (!this.state.roomField) return
+        if (!this.state.room) return
+        if (!this.state.username) return
         const { router } = this.props
         // Go to the room page
         router.push({
             pathname: '/room',
             query: {
-                id: this.state.roomField,
+                id: this.state.room,
+                username: this.state.username,
                 autoconnect: this.state.autoconnect
             }
         })
@@ -67,11 +70,21 @@ class Index extends Component {
                 <p></p>
                 <Grid container spacing={1} direction="column" alignItems="center" justify="center">
                     <Grid item xs="auto">
-                        <Grid container spacing={1} alignItems="center" justify="center">
-                            <Grid item xs={8}>
+                        <Grid container spacing={1} direction="column" alignItems="center" justify="center">
+                            <Grid item xs="auto">
                                 <TextField
-                                    id="roomField"
+                                    id="room"
                                     label="Room"
+                                    variant="outlined"
+                                    fullWidth={true}
+                                    onChange={this.handleChange}
+                                    onKeyPress={this.handleKeyPress}
+                                />
+                            </Grid>
+                            <Grid item xs="auto">
+                                <TextField
+                                    id="username"
+                                    label="Username"
                                     variant="outlined"
                                     fullWidth={true}
                                     onChange={this.handleChange}
@@ -148,7 +161,9 @@ class Index extends Component {
                 <p></p>
                 <Grid container spacing={1} direction="column" alignItems="center" justify="center">
                     <Grid item xs={6}>
-                        <Typography><a href="https://github.com/mattmora/UtilOSC">Github</a></Typography>
+                        <Typography>
+                            <a href="https://github.com/mattmora/UtilOSC">Github</a>
+                        </Typography>
                         <p></p>
                     </Grid>
                 </Grid>

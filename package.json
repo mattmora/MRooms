@@ -19,6 +19,7 @@
         "query-string": "^6.13.6",
         "react": "16.13.1",
         "react-dom": "16.13.1",
+        "react-window": "^1.8.5",
         "socket.io": "^2.3.0",
         "tone": "^14.7.58",
         "xebra.js": "^1.2.5"

@@ -21,25 +21,53 @@ class AppServerEngine extends ServerEngine {
     onPlayerConnected(socket) {
         super.onPlayerConnected(socket)
 
-        socket.on('oscMessage', (roomName, packet) => {
+        socket.on('oscMessage', (roomName, senderName, filters, packet) => {
             const message = osc.readPacket(packet, {})
             console.log(message.address)
 
             console.log(roomName)
             for (const id of this.getRoomPlayers(roomName)) {
-                this.connectedPlayers[id].socket.emit('oscResponse', packet)
+                if (filters[this.connectedPlayers[id].socket.userName].send)
+                    this.connectedPlayers[id].socket.emit('oscResponse', senderName, packet)
             }
         })
 
-        socket.on('roomRequest', (roomName) => {
+        socket.on('roomRequest', (roomName, userName) => {
             if (!Object.keys(this.rooms).includes(roomName)) {
                 this.createRoom(roomName)
                 this.createSyncServer(roomName)
             }
             this.assignPlayerToRoom(socket.playerId, roomName)
             this.assignPlayerToSyncServer(socket, roomName)
+
+            // Get a list of all existing usernames in the room
+            let userList = []
+            const roomPlayers = this.getRoomPlayers(roomName)
+            for (const id of roomPlayers) {
+                if (this.connectedPlayers[id].socket.userName)
+                    userList.push(this.connectedPlayers[id].socket.userName)
+            }
+
+            // Make sure the new user has a unique name
+            let uniqueName = userName
+            let i = 2
+            while (userList.includes(uniqueName)) {
+                uniqueName = `${userName}${i}`
+                i++
+            }
+
+            console.log(uniqueName)
+
+            // Assign the name and add it to the list
+            socket.userName = uniqueName
+            userList.push(uniqueName)
+            
             const state = 'success'
-            socket.emit('roomRequestResponse', state)
+            socket.emit('roomRequestResponse', state, uniqueName)
+
+            for (const id of roomPlayers) {
+                this.connectedPlayers[id].socket.emit('usersChanged', userList)
+            }
         })
     }
 
@@ -85,33 +113,30 @@ class AppServerEngine extends ServerEngine {
     }
 
     onPlayerDisconnected(socketId, playerId) {
+        // Get the disconnecting player
+        const roomName = this.connectedPlayers[socketId].roomName
+
+        // Disconnect them (delete them from connectedPlayers())
         super.onPlayerDisconnected(socketId, playerId)
-        let player = this.gameEngine.world.queryObject({ playerId: playerId })
-        if (player != null) {
-            let room = player.room
-            if (this.roomStages[room] === 'setup') {
-                let removed = player.number
-                this.gameEngine.removeObjectFromWorld(player.id)
-                this.myRooms[room].splice(this.myRooms[room].indexOf(player), 1)
-                for (let p of this.myRooms[room]) {
-                    if (p.number > removed) {
-                        p.number--
-                        p.move(-Number(this.gameEngine.paramsByRoom[room].playerWidth), 0)
-                    }
-                }
-            } else {
-                player.active = false
-                player.ammo = 0
+
+        // Get players left in the room
+        const roomPlayers = this.getRoomPlayers(roomName)
+
+        // Delete the room and syncServer if no one is left in the room
+        if (roomPlayers.length === 0) {
+            delete this.rooms[roomName]
+            delete this.syncServers[roomName]
+        } 
+        // Otherwise send all users the updated user list
+        else {
+            let userList = []
+            for (const id of roomPlayers) {
+                userList.push(this.connectedPlayers[id].socket.userName)
             }
-            let activePlayers = this.gameEngine.queryPlayers({ room: room, active: true })
-            if (activePlayers.length === 0) {
-                this.gameEngine.world.forEachObject((objId, obj) => {
-                    if (obj.room === room) this.gameEngine.removeObjectFromWorld(objId)
-                })
-                delete this.myRooms[room]
-                delete this.syncServers[room]
+
+            for (const id of roomPlayers) {
+                this.connectedPlayers[id].socket.emit('usersChanged', userList)
             }
-            if (this.myRooms.length === 0) this.gameEngine.restoreDefaultSettings()
         }
     }
 

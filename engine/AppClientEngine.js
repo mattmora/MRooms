@@ -38,7 +38,10 @@ class AppClientEngine extends ClientEngine {
         return super.connect().then(() => {
             return new Promise((resolve, reject) => {
                 // Receiving an osc message from the remote server
-                this.socket.on('oscResponse', (packet) => {
+                this.socket.on('oscResponse', (senderName, packet) => {
+
+                    if (!this.app.state.userFilters[senderName].receive) return
+
                     // Read the packet and do whatever with it
                     let message = osc.readPacket(packet, {})
 
@@ -54,7 +57,10 @@ class AppClientEngine extends ClientEngine {
                     // Send the osc message as a json object, which will become a dict in max
                     if (this.app.xebraState != null) {
                         if (this.app.xebraState.connectionState === CONNECTION_STATES.CONNECTED)
-                        this.app.xebraState.sendMessageToChannel(this.app.state.channel, message)
+                            this.app.xebraState.sendMessageToChannel(
+                                this.app.state.channel,
+                                message
+                            )
                     }
 
                     this.app.setState({
@@ -64,21 +70,37 @@ class AppClientEngine extends ClientEngine {
                     console.log(message)
                 })
 
-                this.socket.on('roomRequestResponse', (state) => {
+                this.socket.on('roomRequestResponse', (state, userName) => {
                     if (state === 'success') {
                         console.log(`Connected to room ${this.app.state.id}`)
                         this.startSyncClient()
                         this.transport.start()
-                        // this.app.setState({
-
-                        // })
+                        this.app.setState({
+                            username: userName
+                        })
                     } else if (state === 'closed') {
                         // this.app.setState({
                         // })
                     }
                 })
 
-                this.requestRoomFromServer(this.app.state.id)
+                this.socket.on('usersChanged', (userList) => {
+                    this.app.setState({
+                        users: userList
+                    })
+                    // Remove any old user filters
+                    // for (const key of Object.keys(this.app.state.userFilters)) {
+                    //     if (!userList.includes(key)) delete this.app.state.userFilters[key]
+                    // }
+                    // Add filter objects for any new users
+                    for (const userName of userList) {
+                        if (!Object.keys(this.app.state.userFilters).includes(userName)) {
+                            this.app.state.userFilters[userName] = { send: 'true', receive: 'true' }
+                        }
+                    }
+                })
+
+                this.requestRoomFromServer(this.app.state.id, this.app.state.username)
             })
         })
     }
@@ -87,10 +109,10 @@ class AppClientEngine extends ClientEngine {
         super.disconnect()
     }
 
-    requestRoomFromServer(roomName) {
+    requestRoomFromServer(roomName, userName) {
         if (this.socket) {
             console.log(`Requesting room ${roomName} from server`)
-            this.socket.emit('roomRequest', roomName)
+            this.socket.emit('roomRequest', roomName, userName)
         }
     }
 
@@ -138,7 +160,10 @@ class AppClientEngine extends ClientEngine {
 
     sendOSCToServer(packet) {
         // Make sure the socket exists
-        if (this.socket) this.socket.emit('oscMessage', this.app.state.id, packet.buffer)
+        if (this.socket) {
+            // Send the room name, the sender name, filters and the packet
+            this.socket.emit('oscMessage', this.app.state.id, this.app.state.username, this.app.state.userFilters, packet.buffer)
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
