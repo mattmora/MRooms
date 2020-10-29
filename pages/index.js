@@ -139,7 +139,7 @@ class Index extends Component {
                                 >
                                     UtilOSC can connect with Max through the mira.channel object
                                     from the Max package{' '}
-                                    <a href="https://github.com/Cycling74/miraweb">Miraweb</a>.
+                                    <a href="https://github.com/Cycling74/miraweb">MiraWeb</a>.
                                 </Typography>
                                 <Typography variant="body2" color="textSecondary" component="p">
                                     Below is a minimal patch that can send, receive, and format
