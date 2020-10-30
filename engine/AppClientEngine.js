@@ -5,7 +5,6 @@ const AppRenderer = require('./AppRenderer')
 const { SyncClient } = require('@ircam/sync')
 const { Transport } = require('tone')
 const osc = require('osc/dist/osc-browser')
-const { CONNECTION_STATES } = require('xebra.js')
 
 class AppClientEngine extends ClientEngine {
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +38,6 @@ class AppClientEngine extends ClientEngine {
             return new Promise((resolve, reject) => {
                 // Receiving an osc message from the remote server
                 this.socket.on('oscResponse', (senderName, packet) => {
-
                     if (!this.app.state.userFilters[senderName].receive) return
 
                     // Read the packet and do whatever with it
@@ -55,16 +53,12 @@ class AppClientEngine extends ClientEngine {
 
                     // Xebra
                     // Send the osc message as a json object, which will become a dict in max
-                    if (this.app.xebraState != null) {
-                        if (this.app.xebraState.connectionState === CONNECTION_STATES.CONNECTED)
-                            this.app.xebraState.sendMessageToChannel(
-                                this.app.state.channel,
-                                message
-                            )
+                    if (this.app.state.xebraReady) {
+                        this.app.xebraState.sendMessageToChannel(this.app.state.channel, message)
                     }
 
                     this.app.setState({
-                        remoteMessage: `${message.address} ${message.args}`
+                        remoteMessage: `${message.address} ${message.args} (from ${senderName})`
                     })
 
                     console.log(message)
@@ -162,7 +156,13 @@ class AppClientEngine extends ClientEngine {
         // Make sure the socket exists
         if (this.socket) {
             // Send the room name, the sender name, filters and the packet
-            this.socket.emit('oscMessage', this.app.state.id, this.app.state.username, this.app.state.userFilters, packet.buffer)
+            this.socket.emit(
+                'oscMessage',
+                this.app.state.id,
+                this.app.state.username,
+                this.app.state.userFilters,
+                packet.buffer
+            )
         }
     }
 
@@ -179,6 +179,17 @@ class AppClientEngine extends ClientEngine {
                 //console.log(client.transport.state);
             }
             this.transportSyncCount++
+            if (this.app.state.xebraReady) {
+                this.app.xebraState.sendMessageToChannel(this.app.state.channel, {
+                    address: this.app.state.clockMessage,
+                    args: [
+                        {
+                            type: 'f',
+                            value: this.transport.seconds
+                        }
+                    ]
+                })
+            }
         }
     }
 

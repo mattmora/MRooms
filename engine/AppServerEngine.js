@@ -22,13 +22,17 @@ class AppServerEngine extends ServerEngine {
         super.onPlayerConnected(socket)
 
         socket.on('oscMessage', (roomName, senderName, filters, packet) => {
-            const message = osc.readPacket(packet, {})
-            console.log(message.address)
-
-            console.log(roomName)
-            for (const id of this.getRoomPlayers(roomName)) {
-                if (filters[this.connectedPlayers[id].socket.userName].send)
-                    this.connectedPlayers[id].socket.emit('oscResponse', senderName, packet)
+            try {
+                message = osc.readPacket(packet, {})
+                console.log(message.address)
+                console.log(roomName)
+                for (const id of this.getRoomPlayers(roomName)) {
+                    if (filters[this.connectedPlayers[id].socket.userName].send)
+                        this.connectedPlayers[id].socket.emit('oscResponse', senderName, packet)
+                }
+            }
+            catch {
+                console.log(`Error reading message from ${senderName}`)
             }
         })
 
@@ -61,7 +65,7 @@ class AppServerEngine extends ServerEngine {
             // Assign the name and add it to the list
             socket.userName = uniqueName
             userList.push(uniqueName)
-            
+
             const state = 'success'
             socket.emit('roomRequestResponse', state, uniqueName)
 
@@ -126,7 +130,7 @@ class AppServerEngine extends ServerEngine {
         if (roomPlayers.length === 0) {
             delete this.rooms[roomName]
             delete this.syncServers[roomName]
-        } 
+        }
         // Otherwise send all users the updated user list
         else {
             let userList = []

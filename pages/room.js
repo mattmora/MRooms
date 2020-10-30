@@ -42,6 +42,7 @@ const defaultUserNames = [
 const defaultChannel = 'channel1'
 const defaultAddress = 'localhost' //'ws://localhost'
 const defaultPort = '8086'
+const defaultClockMessage = '/clock'
 
 export async function getServerSideProps(context) {
     return {
@@ -73,7 +74,9 @@ class Room extends Component {
             localSocketState: '',
             autoconnect: false,
             users: [],
-            userFilters: {} // Keys are the elements of users array, values are { send: bool, receive: bool }
+            userFilters: {}, // Keys are the elements of users array, values are { send: bool, receive: bool }
+            clockMessage: defaultClockMessage,
+            xebraReady: false
         }
 
         this.gameEngine = null
@@ -86,10 +89,10 @@ class Room extends Component {
         console.log('Room mounted')
 
         const options = {
-            verbose: true,
+            verbose: process.env.NODE_ENV !== 'production',
             traceLevel: Lib.Trace.TRACE_NONE,
             delayInputCount: 3,
-            scheduler: 'render-schedule',
+            scheduler: 'fixed',
             syncOptions: {
                 sync: 'extrapolate',
                 localObjBending: 1.0,
@@ -111,11 +114,10 @@ class Room extends Component {
 
         // ClientEngine options.autoConnect is true by default, so this calls connect()
         this.clientEngine.start()
-
-        this.state.id = defaultRoomName,
-        this.state.username = defaultUserNames[Math.floor(Math.random() * defaultUserNames.length)],
-
+        this.state.id = defaultRoomName
+        this.state.username = defaultUserNames[Math.floor(Math.random() * defaultUserNames.length)]
         Object.assign(this.state, router.query)
+        this.state.xebraReady = false
 
         console.log(this.state)
         if (this.state.autoconnect === 'true') {
@@ -127,8 +129,15 @@ class Room extends Component {
     componentWillUnmount() {
         console.log('Room will unmount')
         this.clientEngine.disconnect()
-        if (this.localSocket != null) this.localSocket.close()
-        if (this.xebraState != null) this.xebraState.close()
+        if (this.localSocket != null) {
+            this.localSocket.close()
+            this.localSocket = null
+        }
+        if (this.xebraState != null) {
+            this.xebraState.close()
+            this.xebraState = null
+            this.xebraReady = false
+        }
     }
 
     handleChange = (e) => {
@@ -171,7 +180,8 @@ class Room extends Component {
                 if (isNaN(v)) {
                     args.push({
                         type: 's',
-                        value: v.trim()
+                        // Trim whitespace on either end and don't accept non-ASCII characters
+                        value: v.trim().replace(/[^\x00-\xFF]/g, '')
                     })
                 }
                 // Send numbers as floats
@@ -220,6 +230,7 @@ class Room extends Component {
             console.log(channel)
             console.log(message)
             if (message != null) {
+                // Check that there is an address and that it starts with '/'
                 if (osc.isValidMessage(message)) {
                     this.setState({
                         localSocketMessage: `OSC message: ${message.address} ${message.args} (from ${channel})`
@@ -227,8 +238,16 @@ class Room extends Component {
                     const packet = osc.writePacket(message)
                     this.clientEngine.sendOSCToServer(packet)
                 } else {
+                    let address = message.address
+                    let args = messages.args
+                    if (address == null) {
+                        address = '[Missing address]'
+                    }
+                    if (args == null) {
+                        args = '[Missing args]'
+                    }
                     this.setState({
-                        localSocketMessage: `Non-OSC message: ${message} (from ${channel})`
+                        localSocketMessage: `Non-OSC message: ${address} ${message.args} (from ${channel})`
                     })
                 }
             } else {
@@ -240,17 +259,23 @@ class Room extends Component {
 
         this.xebraState.on('connection_changed', () => {
             if (this.xebraState.connectionState === CONNECTION_STATES.INIT)
-                this.setState({ localSocketState: `` })
+                this.setState({ localSocketState: ``, xebraReady: false })
             else if (this.xebraState.connectionState === CONNECTION_STATES.CONNECTING)
-                this.setState({ localSocketState: `Connecting to ${url}.` })
+                this.setState({ localSocketState: `Connecting to ${url}.`, xebraReady: false })
             else if (this.xebraState.connectionState === CONNECTION_STATES.CONNECTED)
-                this.setState({ localSocketState: `Connected to ${url}.` })
+                this.setState({ localSocketState: `Connected to ${url}.`, xebraReady: true })
             else if (this.xebraState.connectionState === CONNECTION_STATES.CONNECTION_FAIL)
-                this.setState({ localSocketState: `Failed to connect to ${url}.` })
+                this.setState({
+                    localSocketState: `Failed to connect to ${url}.`,
+                    xebraReady: false
+                })
             else if (this.xebraState.connectionState === CONNECTION_STATES.RECONNECTING)
-                this.setState({ localSocketState: `Attempting to reconnect to ${url}.` })
+                this.setState({
+                    localSocketState: `Attempting to reconnect to ${url}.`,
+                    xebraReady: false
+                })
             else if (this.xebraState.connectionState === CONNECTION_STATES.DISCONNECTED)
-                this.setState({ localSocketState: `Disconnected from ${url}.` })
+                this.setState({ localSocketState: `Disconnected from ${url}.`, xebraReady: false })
         })
     }
 
@@ -397,7 +422,23 @@ class Room extends Component {
                 <p>Connection: {this.state.localSocketState}</p>
                 <p>Received: {this.state.localSocketMessage}</p>
                 <Divider />
-                <TransportTime room={this} updateInterval={30} />
+                <p></p>
+                <Grid container spacing={1} alignItems="center">
+                    <Grid item xs="auto">
+                        <TextField
+                            id="clockMessage"
+                            label="Clock message"
+                            variant="outlined"
+                            fullWidth={true}
+                            defaultValue={defaultClockMessage}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
+                        />
+                    </Grid>
+                    <Grid item xs="auto">
+                        <TransportTime room={this} updateInterval={30} />
+                    </Grid>
+                </Grid>
             </Layout>
         )
     }
