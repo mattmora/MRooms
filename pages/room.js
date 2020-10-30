@@ -182,20 +182,23 @@ class Room extends Component {
             let args = []
             for (let v of values) {
                 // Send anything that's not a number as a string
-                if (isNaN(v)) {
-                    args.push({
-                        type: 's',
-                        // Trim whitespace on either end and don't accept non-ASCII characters
-                        value: v.trim().replace(/[^\x00-\xFF]/g, '')
-                    })
-                }
-                // Send numbers as floats
-                else {
-                    args.push({
-                        type: 'f',
-                        value: Number(v)
-                    })
-                }
+                // if (isNaN(v)) {
+                //     const s = v.trim()//.replace(/[^\x00-\xFF]/g, '')
+                //     if (s === '') continue
+                //     args.push({
+                //         type: 's',
+                //         // Trim whitespace on either end and don't accept non-ASCII characters
+                //         value: s
+                //     })
+                // }
+                // // Send numbers as floats
+                // else {
+                //     args.push({
+                //         type: 'f',
+                //         value: Number(v)
+                //     })
+                // }
+                args.push(v)
             }
             const oscMessage = {
                 address: address,
