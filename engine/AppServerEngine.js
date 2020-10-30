@@ -22,7 +22,6 @@ class AppServerEngine extends ServerEngine {
         super.onPlayerConnected(socket)
 
         socket.on('oscMessage', (roomName, senderName, filters, message) => {
-
             console.log(message.address)
             console.log(roomName)
             for (const id of this.getRoomPlayers(roomName)) {

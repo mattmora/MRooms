@@ -59,7 +59,6 @@ export default function Layout({ children, home }) {
                     <Link href="/">
                         <a>← Back to home</a>
                     </Link>
-                    <p>{' '}</p>
                 </div>
             )}
         </div>
