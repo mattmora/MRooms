@@ -21,18 +21,13 @@ class AppServerEngine extends ServerEngine {
     onPlayerConnected(socket) {
         super.onPlayerConnected(socket)
 
-        socket.on('oscMessage', (roomName, senderName, filters, packet) => {
-            try {
-                message = osc.readPacket(packet, {})
-                console.log(message.address)
-                console.log(roomName)
-                for (const id of this.getRoomPlayers(roomName)) {
-                    if (filters[this.connectedPlayers[id].socket.userName].send)
-                        this.connectedPlayers[id].socket.emit('oscResponse', senderName, packet)
-                }
-            }
-            catch {
-                console.log(`Error reading message from ${senderName}`)
+        socket.on('oscMessage', (roomName, senderName, filters, message) => {
+
+            console.log(message.address)
+            console.log(roomName)
+            for (const id of this.getRoomPlayers(roomName)) {
+                if (filters[this.connectedPlayers[id].socket.userName].send)
+                    this.connectedPlayers[id].socket.emit('oscResponse', senderName, message)
             }
         })
 

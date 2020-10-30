@@ -14,6 +14,8 @@ import Divider from '@material-ui/core/Divider'
 import Typography from '@material-ui/core/Typography'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Checkbox from '@material-ui/core/Checkbox'
 
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
@@ -76,6 +78,7 @@ class Room extends Component {
             users: [],
             userFilters: {}, // Keys are the elements of users array, values are { send: bool, receive: bool }
             clockMessage: defaultClockMessage,
+            sendClockMessages: false,
             xebraReady: false
         }
 
@@ -135,13 +138,15 @@ class Room extends Component {
         }
         if (this.xebraState != null) {
             this.xebraState.close()
-            this.xebraState = null
             this.xebraReady = false
         }
+        
     }
 
     handleChange = (e) => {
-        this.state[e.target.id] = e.target.value.trim()
+        if (e.target.id === 'sendClockMessages') {
+            this.state[e.target.id] = e.target.checked
+        } else this.state[e.target.id] = e.target.value.trim()
     }
 
     handleKeyPress = (e) => {
@@ -192,11 +197,11 @@ class Room extends Component {
                     })
                 }
             }
-            const packet = osc.writePacket({
+            const oscMessage = {
                 address: address,
                 args: args
-            })
-            this.clientEngine.sendOSCToServer(packet)
+            }
+            this.clientEngine.sendOSCToServer(oscMessage)
         }
     }
 
@@ -235,8 +240,7 @@ class Room extends Component {
                     this.setState({
                         localSocketMessage: `OSC message: ${message.address} ${message.args} (from ${channel})`
                     })
-                    const packet = osc.writePacket(message)
-                    this.clientEngine.sendOSCToServer(packet)
+                    this.clientEngine.sendOSCToServer(message)
                 } else {
                     let address = message.address
                     let args = messages.args
@@ -381,7 +385,7 @@ class Room extends Component {
                         wss://echo.websocket.org and no port for testing. Any message you or others
                         in the room send should be sent to the server, echoed back, and shown below. */}
                     Connect to mira in Max/MSP. Use mira.channel to send and receive arbitrary
-                    messages. <br></br>A mira.frame must exist in the packet to establish a
+                    messages. <br></br>A mira.frame must exist in the patch to establish a
                     connection.
                 </p>
                 <Grid container spacing={1} alignItems="center">
@@ -424,6 +428,19 @@ class Room extends Component {
                 <Divider />
                 <p></p>
                 <Grid container spacing={1} alignItems="center">
+                    <Grid item xs="auto">
+                        <FormControlLabel
+                            label="Send regular clock messages (60 times per second)"
+                            labelPlacement="end"
+                            control={
+                                <Checkbox
+                                    id="sendClockMessages"
+                                    color="primary"
+                                    onChange={this.handleChange}
+                                />
+                            }
+                        />
+                    </Grid>
                     <Grid item xs="auto">
                         <TextField
                             id="clockMessage"

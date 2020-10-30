@@ -37,11 +37,8 @@ class AppClientEngine extends ClientEngine {
         return super.connect().then(() => {
             return new Promise((resolve, reject) => {
                 // Receiving an osc message from the remote server
-                this.socket.on('oscResponse', (senderName, packet) => {
+                this.socket.on('oscResponse', (senderName, message) => {
                     if (!this.app.state.userFilters[senderName].receive) return
-
-                    // Read the packet and do whatever with it
-                    let message = osc.readPacket(packet, {})
 
                     // Generic WebSocket
                     // if (this.app.localSocket != null) {
@@ -152,7 +149,7 @@ class AppClientEngine extends ClientEngine {
         )
     }
 
-    sendOSCToServer(packet) {
+    sendOSCToServer(message) {
         // Make sure the socket exists
         if (this.socket) {
             // Send the room name, the sender name, filters and the packet
@@ -161,7 +158,7 @@ class AppClientEngine extends ClientEngine {
                 this.app.state.id,
                 this.app.state.username,
                 this.app.state.userFilters,
-                packet.buffer
+                message
             )
         }
     }
@@ -179,16 +176,14 @@ class AppClientEngine extends ClientEngine {
                 //console.log(client.transport.state);
             }
             this.transportSyncCount++
-            if (this.app.state.xebraReady) {
-                this.app.xebraState.sendMessageToChannel(this.app.state.channel, {
-                    address: this.app.state.clockMessage,
-                    args: [
-                        {
-                            type: 'f',
-                            value: this.transport.seconds
-                        }
-                    ]
-                })
+            if (this.app.state.sendClockMessages) {
+                if (this.app.state.xebraReady) {
+                    console.log('Sending clock message')
+                    this.app.xebraState.sendMessageToChannel(this.app.state.channel, {
+                        address: this.app.state.clockMessage,
+                        args: [this.transport.seconds]
+                    })
+                }
             }
         }
     }
