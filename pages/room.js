@@ -84,7 +84,6 @@ class Room extends Component {
 
         this.gameEngine = null
         this.clientEngine = null
-        this.localSocket = null
         this.xebraState = null
     }
 
@@ -132,21 +131,19 @@ class Room extends Component {
     componentWillUnmount() {
         console.log('Room will unmount')
         this.clientEngine.disconnect()
-        if (this.localSocket != null) {
-            this.localSocket.close()
-            this.localSocket = null
-        }
         if (this.xebraState != null) {
             this.xebraState.close()
             this.xebraReady = false
         }
-        
     }
 
     handleChange = (e) => {
         if (e.target.id === 'sendClockMessages') {
             this.state[e.target.id] = e.target.checked
-        } else this.state[e.target.id] = e.target.value.trim()
+        } else {
+            // if (e.target.value.includes(/[^\x00-\xFF]/g, '')) console.log('OSC only supports ASCII characters.')
+            this.state[e.target.id] = e.target.value.trim() //.replace(/[^\x00-\xFF]/g, '')
+        }
     }
 
     handleKeyPress = (e) => {
@@ -174,52 +171,22 @@ class Room extends Component {
     sendMessage = () => {
         const message = this.state.message
         console.log(`Sending message ${message}`)
-        if (message.startsWith('/') || !this.state.enforceOSC) {
-            const split = message.split(/ (.+)/)
-            const address = split[0]
-            let values = []
-            if (split[1] !== undefined) values = split[1].split(',')
-            let args = []
-            for (let v of values) {
-                // Send anything that's not a number as a string
-                // if (isNaN(v)) {
-                //     const s = v.trim()//.replace(/[^\x00-\xFF]/g, '')
-                //     if (s === '') continue
-                //     args.push({
-                //         type: 's',
-                //         // Trim whitespace on either end and don't accept non-ASCII characters
-                //         value: s
-                //     })
-                // }
-                // // Send numbers as floats
-                // else {
-                //     args.push({
-                //         type: 'f',
-                //         value: Number(v)
-                //     })
-                // }
-                args.push(v)
-            }
-            const oscMessage = {
-                address: address,
-                args: args
-            }
-            this.clientEngine.sendOSCToServer(oscMessage)
-        }
+        // if (message.startsWith('/') || !this.state.enforceOSC) {
+        this.clientEngine.sendOSCToServer(message)
     }
 
     attemptConnection = () => {
+        this.state.xebraReady = false
         const address = this.state.address
         const port = this.state.port
 
-        // this.createWebSocketClient(address, normalizePort(port))
         this.createXebraClient(address, normalizePort(port))
     }
 
     createXebraClient(address, port) {
         if (this.xebraState !== null) this.xebraState.close()
 
-        let url
+        var url
         if (address.startsWith('ws://')) address = address.slice(5)
         const secure = address.startsWith('wss://')
         if (secure) address = address.slice(6)
@@ -238,28 +205,13 @@ class Room extends Component {
             console.log(channel)
             console.log(message)
             if (message != null) {
-                // Check that there is an address and that it starts with '/'
-                if (osc.isValidMessage(message)) {
-                    this.setState({
-                        localSocketMessage: `OSC message: ${message.address} ${message.args} (from ${channel})`
-                    })
-                    this.clientEngine.sendOSCToServer(message)
-                } else {
-                    let address = message.address
-                    let args = messages.args
-                    if (address == null) {
-                        address = '[Missing address]'
-                    }
-                    if (args == null) {
-                        args = '[Missing args]'
-                    }
-                    this.setState({
-                        localSocketMessage: `Non-OSC message: ${address} ${message.args} (from ${channel})`
-                    })
-                }
+                this.setState({
+                    localSocketMessage: `Message: ${message} (from ${channel})`
+                })
+                this.clientEngine.sendOSCToServer(message)
             } else {
                 this.setState({
-                    localSocketMessage: `Non-OSC message: ${channel}`
+                    localSocketMessage: `Null message (from ${channel})`
                 })
             }
         })
@@ -284,37 +236,6 @@ class Room extends Component {
             else if (this.xebraState.connectionState === CONNECTION_STATES.DISCONNECTED)
                 this.setState({ localSocketState: `Disconnected from ${url}.`, xebraReady: false })
         })
-    }
-
-    createWebSocketClient(address, port) {
-        if (this.localSocket !== null) this.localSocket.close()
-
-        let url
-        //wss://
-        if (port) url = `${address}:${port}`
-        else url = address
-
-        // Can't get socket.io to work for me here for unknown reasons
-        // so just gonna use WebSocket.
-        this.localSocket = new WebSocket(url)
-
-        this.localSocket.onopen = (event) => {
-            console.log('Local socket open')
-            this.setState({ localSocketState: `Connected to ${url}.` })
-        }
-
-        this.localSocket.onclose = (event) => {
-            console.log('Local socket close')
-            if (event.code === 1000)
-                // Normal closure
-                this.setState({ localSocketState: `Disconnected from ${url}.` })
-            else this.setState({ localSocketState: `Error connecting to ${url}.` })
-        }
-
-        // Receive message from server entered by the user on
-        this.localSocket.onmessage = (event) => {
-            this.setState({ localSocketMessage: event.data })
-        }
     }
 
     render() {

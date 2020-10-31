@@ -3,8 +3,6 @@
 const { ClientEngine } = require('lance-gg/dist/client-module/lance-gg')
 const AppRenderer = require('./AppRenderer')
 const { SyncClient } = require('@ircam/sync')
-const { Transport } = require('tone')
-const osc = require('osc/dist/osc-browser')
 
 class AppClientEngine extends ClientEngine {
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -13,9 +11,6 @@ class AppClientEngine extends ClientEngine {
         super(gameEngine, options, AppRenderer)
 
         this.syncClient = null
-        this.transportSyncInterval = 120
-        this.transportSyncCount = 0
-        this.transport = Transport
         this.player = null
         this.players = []
         this.playersChanged = false
@@ -40,22 +35,22 @@ class AppClientEngine extends ClientEngine {
                 this.socket.on('oscResponse', (senderName, message) => {
                     if (!this.app.state.userFilters[senderName].receive) return
 
-                    // Generic WebSocket
-                    // if (this.app.localSocket != null) {
-                    //     if (this.app.localSocket.readyState === WebSocket.OPEN) {
-                    //         // Send the received packet to localhost
-                    //         this.app.localSocket.send(message.address)
-                    //     }
-                    // }
-
                     // Xebra
                     // Send the osc message as a json object, which will become a dict in max
+                    var messageArray = message.split(' ').map(v => {
+                        if (isNaN(v)) return v
+                        else return Number(v)
+                    })
+                    
                     if (this.app.state.xebraReady) {
-                        this.app.xebraState.sendMessageToChannel(this.app.state.channel, message)
+                        this.app.xebraState.sendMessageToChannel(
+                            this.app.state.channel,
+                            messageArray
+                        )
                     }
 
                     this.app.setState({
-                        remoteMessage: `${message.address} ${message.args} (from ${senderName})`
+                        remoteMessage: `${message} (from ${senderName})`
                     })
 
                     console.log(message)
@@ -65,7 +60,6 @@ class AppClientEngine extends ClientEngine {
                     if (state === 'success') {
                         console.log(`Connected to room ${this.app.state.id}`)
                         this.startSyncClient()
-                        this.transport.start()
                         this.app.setState({
                             username: userName
                         })
@@ -98,6 +92,7 @@ class AppClientEngine extends ClientEngine {
 
     disconnect() {
         super.disconnect()
+        delete this.syncClient
     }
 
     requestRoomFromServer(roomName, userName) {
@@ -152,7 +147,7 @@ class AppClientEngine extends ClientEngine {
     sendOSCToServer(message) {
         // Make sure the socket exists
         if (this.socket) {
-            // Send the room name, the sender name, filters and the packet
+            // Send the room name, the sender name, filters and the message
             this.socket.emit(
                 'oscMessage',
                 this.app.state.id,
@@ -167,34 +162,22 @@ class AppClientEngine extends ClientEngine {
     /// SOUND HANDLING AND CLIENT LOGIC
 
     /// STEP
-    preStepLogic() {
-        // Sync the transport every so often
-        if (this.transport.state === 'started') {
-            if (this.transportSyncCount >= this.transportSyncInterval) {
-                this.transport.seconds = this.syncClient.getSyncTime()
-                this.transportSyncCount = 0
-                //console.log(client.transport.state);
-            }
+    preStepLogic = () => {
+        if (this.syncClient != null) {
             this.transportSyncCount++
             if (this.app.state.sendClockMessages) {
                 if (this.app.state.xebraReady) {
-                    console.log('Sending clock message')
-                    this.app.xebraState.sendMessageToChannel(this.app.state.channel, {
-                        address: this.app.state.clockMessage,
-                        args: [this.transport.seconds]
-                    })
+                    this.app.xebraState.sendMessageToChannel(this.app.state.channel, [
+                        this.app.state.clockMessage,
+                        this.syncClient.getSyncTime()
+                    ])
                 }
             }
         }
     }
 
     postStepLogic() {
-        if (this.syncClient !== null) {
-            if (this.transport.state !== 'started') {
-                this.transport.start()
-                this.transport.seconds = this.syncClient.getSyncTime()
-            }
-        }
+       
     }
 }
 
