@@ -37,11 +37,11 @@ class AppClientEngine extends ClientEngine {
 
                     // Xebra
                     // Send the osc message as a json object, which will become a dict in max
-                    var messageArray = message.split(' ').map(v => {
+                    var messageArray = message.split(' ').map((v) => {
                         if (isNaN(v)) return v
                         else return Number(v)
                     })
-                    
+
                     if (this.app.state.xebraReady) {
                         this.app.xebraState.sendMessageToChannel(
                             this.app.state.channel,
@@ -162,11 +162,13 @@ class AppClientEngine extends ClientEngine {
     /// SOUND HANDLING AND CLIENT LOGIC
 
     /// STEP
-    preStepLogic = () => {
+    preStepLogic() {
+        console.log('try sync')
         if (this.syncClient != null) {
             this.transportSyncCount++
             if (this.app.state.sendClockMessages) {
                 if (this.app.state.xebraReady) {
+                    console.log('sync')
                     this.app.xebraState.sendMessageToChannel(this.app.state.channel, [
                         this.app.state.clockMessage,
                         this.syncClient.getSyncTime()
@@ -174,11 +176,13 @@ class AppClientEngine extends ClientEngine {
                 }
             }
         }
+        /* For some reason, Serializer gives an error only in production. 
+        Ensuring that inboundMessages is empty prevents it and I don't need this right now. 
+        If I add actual game objects will need to figure this out. */
+        this.inboundMessages = []
     }
 
-    postStepLogic() {
-       
-    }
+    postStepLogic() {}
 }
 
 module.exports = AppClientEngine
