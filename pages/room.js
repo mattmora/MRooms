@@ -251,10 +251,11 @@ class Room extends Component {
                         </h1>
                         <p>
                             Enter a message to send to everyone in this room and to a mira.channel
-                            object you're connected to. <br></br>The format of a message is an
-                            address starting with '/', followed by a space, followed by argument
-                            values separated by commas. <br></br>Ex.{' '}
-                            <i>/hello 1,2, spaces and strings are okay!, 3,4</i>
+                            object you're connected to. <br></br>For the purpose of parsing numbers,
+                            elements of messages are separated with spaces. Message format is
+                            otherwise arbitrary, however it is recommended to use OSC formatting
+                            (first element is an address starting with '/' and following elements
+                            are arguments). <br></br>Ex. <i>/hello 1 2 text 34</i>
                             <br></br>Messages from others in the room will also be sent to the
                             mira.channel object.
                         </p>

@@ -70,7 +70,13 @@ class Index extends Component {
                 <p></p>
                 <Grid container spacing={1} direction="column" alignItems="center" justify="center">
                     <Grid item xs="auto">
-                        <Grid container spacing={1} direction="column" alignItems="center" justify="center">
+                        <Grid
+                            container
+                            spacing={1}
+                            direction="column"
+                            alignItems="center"
+                            justify="center"
+                        >
                             <Grid item xs="auto">
                                 <TextField
                                     id="room"
@@ -137,14 +143,13 @@ class Index extends Component {
                                     color="textSecondary"
                                     component="p"
                                 >
-                                    UtilOSC can connect with Max through the mira.channel object
-                                    from the Max package{' '}
+                                    UtilOSC can connect with Max through the <b>mira.channel</b>{' '}
+                                    object from the Max package{' '}
                                     <a href="https://github.com/Cycling74/miraweb">MiraWeb</a>.
                                 </Typography>
                                 <Typography variant="body2" color="textSecondary" component="p">
-                                    Below is a minimal patch that can send, receive, and format
-                                    messages. Note that a mira.frame object is required because it
-                                    creates a WebSocket server for UtilOSC to connect to.
+                                    Below is a minimal patch that can send and receive. Note that a{' '}
+                                    <b>mira.frame</b> object is required to establish a connection.
                                 </Typography>
                             </CardContent>
                             <CardMedia
