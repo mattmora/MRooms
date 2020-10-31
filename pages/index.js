@@ -148,8 +148,13 @@ class Index extends Component {
                                     <a href="https://github.com/Cycling74/miraweb">MiraWeb</a>.
                                 </Typography>
                                 <Typography variant="body2" color="textSecondary" component="p">
-                                    Below is a minimal patch that can send and receive. Note that a{' '}
-                                    <b>mira.frame</b> object is required to establish a connection.
+                                    Below is a minimal patch that can send and receive messages.
+                                    Note that a <b>mira.frame</b> object is required to establish a
+                                    connection. You can this download patch by clicking{' '}
+                                    <a href="/downloads/utiloscexamplepatch.maxpat" download>
+                                        here
+                                    </a>
+                                    .
                                 </Typography>
                             </CardContent>
                             <CardMedia
