@@ -269,6 +269,7 @@ class Room extends Component {
                         </Card>
                     </Grid>
                 </Grid>
+                <p>Received: {this.state.remoteMessage}</p>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs={6}>
                         <TextField
@@ -303,7 +304,7 @@ class Room extends Component {
                         </Button>
                     </Grid>
                 </Grid>
-                <p>Received: {this.state.remoteMessage}</p>
+                <p></p>
                 <Divider />
                 <p>
                     {/* Enter a WebSocket server to connect to. <br></br>Try
@@ -313,6 +314,8 @@ class Room extends Component {
                     messages. <br></br>A mira.frame must exist in the patch to establish a
                     connection.
                 </p>
+                <p>Connection: {this.state.localSocketState}</p>
+                <p>Received: {this.state.localSocketMessage}</p>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs={4}>
                         <TextField
@@ -348,8 +351,7 @@ class Room extends Component {
                         </Button>
                     </Grid>
                 </Grid>
-                <p>Connection: {this.state.localSocketState}</p>
-                <p>Received: {this.state.localSocketMessage}</p>
+                <p></p>
                 <Divider />
                 <p></p>
                 <Grid container spacing={1} alignItems="center">
@@ -369,7 +371,7 @@ class Room extends Component {
                     <Grid item xs="auto">
                         <TextField
                             id="clockMessage"
-                            label="Clock message"
+                            label="Message prefix"
                             variant="outlined"
                             fullWidth={true}
                             defaultValue={defaultClockMessage}
