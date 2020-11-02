@@ -144,24 +144,24 @@ class Room extends Component {
             for (let i = 0; i < WebMidi.outputs.length; i++) {
                 console.log(i + ': ' + WebMidi.outputs[i].name)
             }
+        })
+        
+        // Reacting when a new device becomes available
+        WebMidi.addListener('connected', (e) => {
+            this.setState({})
+        })
 
-            // Reacting when a new device becomes available
-            WebMidi.addListener('connected', (e) => {
-                this.setState({})
-            })
-
-            // Reacting when a device becomes unavailable
-            WebMidi.addListener('disconnected', (e) => {
-                let input = this.state.midiInputSelect
-                if (WebMidi.inputs[this.state.midiInputSelect] == null) {
-                    input = -1
-                }
-                let output = this.state.midiOutputSelect
-                if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
-                    output = -1
-                }
-                this.setState({ midiInputSelect: input, midiOutputSelect: output })
-            })
+        // Reacting when a device becomes unavailable
+        WebMidi.addListener('disconnected', (e) => {
+            let input = this.state.midiInputSelect
+            if (WebMidi.inputs[this.state.midiInputSelect] == null) {
+                input = -1
+            }
+            let output = this.state.midiOutputSelect
+            if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
+                output = -1
+            }
+            this.setState({ midiInputSelect: input, midiOutputSelect: output })
         })
     }
 
