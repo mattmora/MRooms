@@ -1,5 +1,5 @@
 {
-    "name": "maxrooms",
+    "name": "mrooms",
     "version": "0.1.0",
     "license": "MIT",
     "private": true,
@@ -30,13 +30,13 @@
     "main": "next.config.js",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/mattmora/MaxRooms.git"
+        "url": "git+https://github.com/mattmora/MRooms.git"
     },
     "author": "",
     "bugs": {
-        "url": "https://github.com/mattmora/MaxRooms/issues"
+        "url": "https://github.com/mattmora/MRooms/issues"
     },
-    "homepage": "https://github.com/mattmora/MaxRooms#readme",
+    "homepage": "https://github.com/mattmora/MRooms#readme",
     "description": "",
     "prettier": {
         "trailingComma": "none",

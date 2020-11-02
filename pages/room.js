@@ -125,7 +125,6 @@ class Room extends Component {
         //https://editor.p5js.org/dbarrett/sketches/HJhBG-LI7
         WebMidi.enable((err) => {
             //check if WebMidi.js is enabled
-
             if (err) {
                 console.log('WebMidi could not be enabled.', err)
             } else {
@@ -474,7 +473,9 @@ class Room extends Component {
                 </Grid>
                 <p></p>
                 <Divider />
-                <p>
+                {WebMidi.enabled ? (
+                    <div>
+                    <p>
                     Set MIDI input and output devices. MIDI from your input device will be sent to
                     users in the room. MIDI from other users will be sent to your output device. The
                     send and receive settings in the user list at the top of the page also apply
@@ -513,6 +514,11 @@ class Room extends Component {
                     </Grid>
                 </Grid>
                 <p></p>
+                </div>
+                ) : (
+                    <p> Error: MIDI not enabled.</p>
+                )}
+                
                 <Divider></Divider>
                 <p>
                     A clock synchronized for everyone in the room. It takes a moment to synchronize
