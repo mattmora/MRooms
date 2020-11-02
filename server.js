@@ -17,14 +17,6 @@ const AppGameEngine = require('./engine/AppGameEngine')
 const AppServerEngine = require('./engine/AppServerEngine')
 const { Lib } = require('lance-gg')
 
-// if(!dev){
-//     if(!window.console) window.console = {};
-//     var methods = ["log", "debug", "warn", "info"];
-//     for(var i=0;i<methods.length;i++){
-//         console[methods[i]] = function(){};
-//     }
-// }
-
 nextApp.prepare().then(() => {
     app.get('*', (req, res) => {
         return nextHandler(req, res)

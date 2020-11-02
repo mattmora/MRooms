@@ -9,6 +9,6 @@ module.exports = (phase, { defaultConfig }) => {
     }
 
     return {
-        reactStrictMode: true,
+        reactStrictMode: false,
     }
 }

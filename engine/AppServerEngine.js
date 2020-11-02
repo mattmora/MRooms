@@ -2,7 +2,6 @@
 
 const { ServerEngine } = require('lance-gg')
 const { SyncServer } = require('@ircam/sync')
-const osc = require('osc/dist/osc-browser')
 
 class AppServerEngine extends ServerEngine {
     constructor(io, gameEngine, inputOptions) {
@@ -21,18 +20,30 @@ class AppServerEngine extends ServerEngine {
     onPlayerConnected(socket) {
         super.onPlayerConnected(socket)
 
-        socket.on('oscMessage', (roomName, senderName, filters, message) => {
+        socket.on('messageToServer', (roomName, senderName, filters, message) => {
             console.log(message)
             console.log(roomName)
             for (const id of this.getRoomPlayers(roomName)) {
                 if (filters[this.connectedPlayers[id].socket.userName].send)
-                    this.connectedPlayers[id].socket.emit('oscResponse', senderName, message)
+                    this.connectedPlayers[id].socket.emit('messageFromServer', senderName, message)
+            }
+        })
+
+        socket.on('midiMessageToServer', (roomName, senderName, filters, message) => {
+            for (const id of this.getRoomPlayers(roomName)) {
+                if (filters[this.connectedPlayers[id].socket.userName].send)
+                    this.connectedPlayers[id].socket.emit(
+                        'midiMessageFromServer',
+                        senderName,
+                        message
+                    )
             }
         })
 
         socket.on('roomRequest', (roomName, userName) => {
             if (!Object.keys(this.rooms).includes(roomName)) {
                 this.createRoom(roomName)
+                this.rooms[roomName].resetTime = 0
                 this.createSyncServer(roomName)
             }
             this.assignPlayerToRoom(socket.playerId, roomName)
@@ -60,11 +71,23 @@ class AppServerEngine extends ServerEngine {
             socket.userName = uniqueName
             userList.push(uniqueName)
 
+            const roomInfo = {
+                resetTime: this.rooms[roomName].resetTime
+            }
+
             const state = 'success'
-            socket.emit('roomRequestResponse', state, uniqueName)
+            socket.emit('roomRequestResponse', state, uniqueName, roomInfo)
 
             for (const id of roomPlayers) {
                 this.connectedPlayers[id].socket.emit('usersChanged', userList)
+            }
+        })
+
+        socket.on('resetClockRequest', (roomName, time) => {
+            console.log(`Reset clock at ${time}`)
+            this.rooms[roomName].resetTime = time
+            for (const id of this.getRoomPlayers(roomName)) {
+                this.connectedPlayers[id].socket.emit('resetClock', time)
             }
         })
     }

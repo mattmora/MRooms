@@ -26,10 +26,9 @@ export default class TransportTime extends Component {
     getTransportTime() {
         const { clientEngine } = this.props.room
         if (clientEngine !== null) {
-            if (clientEngine.syncClient !== null)
-                return Number.parseFloat(clientEngine.syncClient.getSyncTime()).toFixed(3)
+            return Number.parseFloat(clientEngine.getAdjustedSyncTime()).toFixed(3)
         }
-        return '-'
+        return 0
     }
 
     render() {

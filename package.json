@@ -15,13 +15,13 @@
         "lance-gg": "^4.0.8",
         "next": "^9.5.5",
         "normalize-port": "^1.0.0",
-        "osc": "^2.4.1",
         "query-string": "^6.13.6",
         "react": "16.13.1",
         "react-dom": "16.13.1",
         "react-window": "^1.8.5",
         "socket.io": "^2.3.0",
         "tone": "^14.7.58",
+        "webmidi": "^2.5.1",
         "xebra.js": "^1.2.5"
     },
     "devDependencies": {

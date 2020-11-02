@@ -7,6 +7,7 @@ import TransportTime from '../components/transportTime'
 import UserList from '../components/userList'
 import utilStyles from '../styles/utils.module.css'
 
+// Material UI imports
 import Grid from '@material-ui/core/Grid'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
@@ -16,31 +17,21 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
+import InputLabel from '@material-ui/core/InputLabel'
+import MenuItem from '@material-ui/core/MenuItem'
+import FormControl from '@material-ui/core/FormControl'
+import Select from '@material-ui/core/Select'
 
+import WebMidi from 'webmidi'
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
 import { Lib } from 'lance-gg'
-import osc from 'osc/dist/osc-browser'
 import normalizePort from 'normalize-port'
 import { State, SUPPORTED_OBJECTS, CONNECTION_STATES } from 'xebra.js'
+import { ListItemText } from '@material-ui/core'
 
 const defaultRoomName = 'Default'
-const defaultUserNames = [
-    'Jeff',
-    'Mike',
-    'Matt',
-    'Josh',
-    'Jason',
-    'Abbie',
-    'Emily',
-    'Yue',
-    'Gulli',
-    'Liam',
-    'Nick',
-    'Nikitas',
-    'Theo',
-    'Claire'
-]
+const defaultUserNames = ['User']
 const defaultChannel = 'channel1'
 const defaultAddress = 'localhost' //'ws://localhost'
 const defaultPort = '8086'
@@ -79,7 +70,11 @@ class Room extends Component {
             userFilters: {}, // Keys are the elements of users array, values are { send: bool, receive: bool }
             clockMessage: defaultClockMessage,
             sendClockMessages: false,
-            xebraReady: false
+            xebraReady: false,
+            midiInputSelect: -1,
+            midiOutputSelect: -1,
+            ping: '',
+            resetTime: 0
         }
 
         this.gameEngine = null
@@ -126,6 +121,48 @@ class Room extends Component {
             console.log(router.query)
             this.createXebraClient(this.state.address, normalizePort(this.state.port))
         }
+
+        //https://editor.p5js.org/dbarrett/sketches/HJhBG-LI7
+        WebMidi.enable((err) => {
+            //check if WebMidi.js is enabled
+
+            if (err) {
+                console.log('WebMidi could not be enabled.', err)
+            } else {
+                console.log('WebMidi enabled!')
+            }
+
+            //name our visible MIDI input and output ports
+            console.log('---')
+            console.log('Inputs Ports: ')
+            for (let i = 0; i < WebMidi.inputs.length; i++) {
+                console.log(i + ': ' + WebMidi.inputs[i].name)
+            }
+
+            console.log('---')
+            console.log('Output Ports: ')
+            for (let i = 0; i < WebMidi.outputs.length; i++) {
+                console.log(i + ': ' + WebMidi.outputs[i].name)
+            }
+
+            // Reacting when a new device becomes available
+            WebMidi.addListener('connected', (e) => {
+                this.setState({})
+            })
+
+            // Reacting when a device becomes unavailable
+            WebMidi.addListener('disconnected', (e) => {
+                let input = this.state.midiInputSelect
+                if (WebMidi.inputs[this.state.midiInputSelect] == null) {
+                    input = -1
+                }
+                let output = this.state.midiOutputSelect
+                if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
+                    output = -1
+                }
+                this.setState({ midiInputSelect: input, midiOutputSelect: output })
+            })
+        })
     }
 
     componentWillUnmount() {
@@ -135,11 +172,41 @@ class Room extends Component {
             this.xebraState.close()
             this.xebraReady = false
         }
+        WebMidi.disable()
     }
 
     handleChange = (e) => {
         if (e.target.id === 'sendClockMessages') {
             this.state[e.target.id] = e.target.checked
+        } else if (e.target.name === 'midiInputSelect') {
+            // Remove all listeners for old input
+            if (this.state.midiInputSelect >= 0) {
+                if (WebMidi.inputs[this.state.midiInputSelect] != null)
+                    WebMidi.inputs[this.state.midiInputSelect].removeListener()
+            }
+
+            // Set the new input and add listeners
+            this.setState({ midiInputSelect: e.target.value })
+
+            // Based on https://editor.p5js.org/dbarrett/sketches/HJhBG-LI7
+            console.log(e.target.value)
+            if (e.target.value >= 0) {
+                const input = WebMidi.inputs[e.target.value]
+
+                input.addListener('midimessage', 'all', (message) => {
+                    //Show what we are receiving
+                    console.log(message)
+                    this.clientEngine.socket.emit(
+                        'midiMessageToServer',
+                        this.state.id,
+                        this.state.username,
+                        this.state.userFilters,
+                        message
+                    )
+                })
+            }
+        } else if (e.target.name === 'midiOutputSelect') {
+            this.setState({ midiOutputSelect: e.target.value })
         } else {
             // if (e.target.value.includes(/[^\x00-\xFF]/g, '')) console.log('OSC only supports ASCII characters.')
             this.state[e.target.id] = e.target.value.trim() //.replace(/[^\x00-\xFF]/g, '')
@@ -155,7 +222,7 @@ class Room extends Component {
             // ================================================================
             // Handling for message text field
             if (whichTextField === 'message' || whichTextField === 'channel') {
-                this.sendMessage()
+                this.sendMessageToServer(this.state.message)
             }
 
             // ================================================================
@@ -168,11 +235,26 @@ class Room extends Component {
         }
     }
 
-    sendMessage = () => {
-        const message = this.state.message
+    sendMessageToServer = (message) => {
         console.log(`Sending message ${message}`)
         // if (message.startsWith('/') || !this.state.enforceOSC) {
-        this.clientEngine.sendOSCToServer(message)
+        if (this.clientEngine.socket) {
+            // Send the room name, the sender name, filters and the message
+            this.clientEngine.socket.emit(
+                'messageToServer',
+                this.state.id,
+                this.state.username,
+                this.state.userFilters,
+                message
+            )
+        }
+    }
+
+    sendMidiMessageOut = (message) => {
+        if (WebMidi.outputs[this.state.midiOutputSelect] == null) return
+        const data = Object.values(message.data)
+        const status = data.splice(0, 1)
+        WebMidi.outputs[this.state.midiOutputSelect].send(status, data, message.timestamp)
     }
 
     attemptConnection = () => {
@@ -181,6 +263,16 @@ class Room extends Component {
         const port = this.state.port
 
         this.createXebraClient(address, normalizePort(port))
+    }
+
+    resetClock = () => {
+        if (this.clientEngine == null) return
+        if (this.clientEngine.syncClient == null) return
+        this.clientEngine.socket.emit(
+            'resetClockRequest',
+            this.state.id,
+            this.clientEngine.syncClient.getSyncTime()
+        )
     }
 
     createXebraClient(address, port) {
@@ -208,7 +300,7 @@ class Room extends Component {
                 this.setState({
                     localSocketMessage: `Message: ${message} (from ${channel})`
                 })
-                this.clientEngine.sendOSCToServer(message)
+                this.sendMessageToServer(message)
             } else {
                 this.setState({
                     localSocketMessage: `Null message (from ${channel})`
@@ -239,24 +331,48 @@ class Room extends Component {
     }
 
     render() {
+        const midiInputs = [
+            <MenuItem key={-1} value={-1}>
+                No device
+            </MenuItem>
+        ]
+        const midiOutputs = [
+            <MenuItem key={-1} value={-1}>
+                No device
+            </MenuItem>
+        ]
+        for (let i = 0; i < WebMidi.inputs.length; ++i) {
+            midiInputs.push(
+                <MenuItem key={i} value={i}>
+                    {WebMidi.inputs[i].name}
+                </MenuItem>
+            )
+        }
+        for (let i = 0; i < WebMidi.outputs.length; ++i) {
+            midiOutputs.push(
+                <MenuItem key={i} value={i}>
+                    {WebMidi.outputs[i].name}
+                </MenuItem>
+            )
+        }
         return (
             <Layout>
+                <Head>
+                    <title>UtilOSC Room {this.state.id}</title>
+                </Head>
+                <h1>
+                    {this.state.id} : {this.state.username}
+                </h1>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs={7}>
-                        <Head>
-                            <title>UtilOSC Room {this.state.id}</title>
-                        </Head>
-                        <h1>
-                            {this.state.id} : {this.state.username}
-                        </h1>
                         <p>
                             Enter a message to send to everyone in this room and to a mira.channel
                             object you're connected to. <br></br>For the purpose of parsing numbers,
                             elements of messages are separated with spaces. Message format is
                             otherwise arbitrary, however it is recommended to use OSC formatting
                             (first element is an address starting with '/' and following elements
-                            are arguments). <br></br>Ex. <i>/hello 1 2 text 34</i>
-                            <br></br>Messages from others in the room will also be sent to the
+                            are arguments). <br></br>Ex. /hello 1 2 text 34 → [ /hello, 1, 2, text,
+                            34 ]<br></br>Messages from others in the room will also be sent to the
                             mira.channel object.
                         </p>
                     </Grid>
@@ -267,6 +383,9 @@ class Room extends Component {
                                 <UserList room={this} />
                             </CardContent>
                         </Card>
+                        <p></p>
+                        <Divider></Divider>
+                        <Typography>Ping: {this.state.ping}</Typography>
                     </Grid>
                 </Grid>
                 <p>Received: {this.state.remoteMessage}</p>
@@ -298,7 +417,9 @@ class Room extends Component {
                             variant="outlined"
                             color="primary"
                             size="large"
-                            onClick={this.sendMessage}
+                            onClick={() => {
+                                this.sendMessageToServer(this.state.message)
+                            }}
                         >
                             Send
                         </Button>
@@ -353,8 +474,63 @@ class Room extends Component {
                 </Grid>
                 <p></p>
                 <Divider />
-                <p></p>
+                <p>
+                    Set MIDI input and output devices. MIDI from your input device will be sent to
+                    users in the room. MIDI from other users will be sent to your output device. The
+                    send and receive settings in the user list at the top of the page also apply
+                    here.
+                </p>
                 <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={4}>
+                        <div>
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel id="midi-input-select-label">MIDI Input</InputLabel>
+                                <Select
+                                    labelId="midi-input-select-label"
+                                    name="midiInputSelect"
+                                    value={this.state.midiInputSelect}
+                                    onChange={this.handleChange}
+                                    label="MIDI Input"
+                                >
+                                    {midiInputs}
+                                </Select>
+                            </FormControl>
+                        </div>
+                    </Grid>
+                    <Grid item xs={4}>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel id="midi-output-select-label">MIDI Output</InputLabel>
+                            <Select
+                                labelId="midi-output-select-label"
+                                name="midiOutputSelect"
+                                value={this.state.midiOutputSelect}
+                                onChange={this.handleChange}
+                                label="MIDI Output"
+                            >
+                                {midiOutputs}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                </Grid>
+                <p></p>
+                <Divider></Divider>
+                <p>
+                    A clock synchronized for everyone in the room. It takes a moment to synchronize
+                    upon entering the room. Check the box to send messages to Max with the time.
+                    Click the reset button to reset the clock to 0 for everyone in the room.
+                </p>
+                <Grid container spacing={1} alignItems="center">
+                    <Grid item xs="auto">
+                        <TextField
+                            id="clockMessage"
+                            label="Message prefix"
+                            variant="outlined"
+                            fullWidth={true}
+                            defaultValue={defaultClockMessage}
+                            onChange={this.handleChange}
+                            onKeyPress={this.handleKeyPress}
+                        />
+                    </Grid>
                     <Grid item xs="auto">
                         <FormControlLabel
                             label="Send regular clock messages (60 times per second)"
@@ -368,16 +544,18 @@ class Room extends Component {
                             }
                         />
                     </Grid>
+                </Grid>
+                <Grid container spacing={1} alignItems="center">
                     <Grid item xs="auto">
-                        <TextField
-                            id="clockMessage"
-                            label="Message prefix"
+                        <Button
+                            id="resetClockButton"
                             variant="outlined"
-                            fullWidth={true}
-                            defaultValue={defaultClockMessage}
-                            onChange={this.handleChange}
-                            onKeyPress={this.handleKeyPress}
-                        />
+                            color="primary"
+                            size="large"
+                            onClick={this.resetClock}
+                        >
+                            Reset
+                        </Button>
                     </Grid>
                     <Grid item xs="auto">
                         <TransportTime room={this} updateInterval={30} />

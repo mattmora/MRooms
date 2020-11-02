@@ -31,12 +31,13 @@ class AppClientEngine extends ClientEngine {
     connect(options = {}) {
         return super.connect().then(() => {
             return new Promise((resolve, reject) => {
-                // Receiving an osc message from the remote server
-                this.socket.on('oscResponse', (senderName, message) => {
+                // Receiving a message from the remote server
+                this.socket.on('messageFromServer', (senderName, message) => {
                     if (!this.app.state.userFilters[senderName].receive) return
 
                     // Xebra
-                    // Send the osc message as a json object, which will become a dict in max
+                    // Split the message into an array then send it
+                    // to max where it will become a list
                     var messageArray = message.split(' ').map((v) => {
                         if (isNaN(v)) return v
                         else return Number(v)
@@ -56,12 +57,19 @@ class AppClientEngine extends ClientEngine {
                     console.log(message)
                 })
 
-                this.socket.on('roomRequestResponse', (state, userName) => {
+                this.socket.on('midiMessageFromServer', (senderName, message) => {
+                    if (!this.app.state.userFilters[senderName].receive) return
+                    console.log(message)
+                    this.app.sendMidiMessageOut(message)
+                })
+
+                this.socket.on('roomRequestResponse', (state, userName, roomInfo) => {
                     if (state === 'success') {
                         console.log(`Connected to room ${this.app.state.id}`)
                         this.startSyncClient()
                         this.app.setState({
-                            username: userName
+                            username: userName,
+                            resetTime: roomInfo.resetTime
                         })
                     } else if (state === 'closed') {
                         // this.app.setState({
@@ -85,6 +93,10 @@ class AppClientEngine extends ClientEngine {
                     }
                 })
 
+                this.socket.on('resetClock', time => {
+                    this.app.setState({ resetTime: time })
+                })
+
                 this.requestRoomFromServer(this.app.state.id, this.app.state.username)
             })
         })
@@ -104,9 +116,17 @@ class AppClientEngine extends ClientEngine {
 
     startSyncClient() {
         const startTime = performance.now()
-        this.syncClient = new SyncClient(() => {
-            return (performance.now() - startTime) / 1000
-        })
+        this.syncClient = new SyncClient(
+            () => {
+                return (performance.now() - startTime) / 1000
+            },
+            {
+                pingSeriesDelay: {
+                    min: 3,
+                    max: 5
+                }
+            }
+        )
         this.syncClient.start(
             // send function
             (pingId, clientPingTime) => {
@@ -140,22 +160,18 @@ class AppClientEngine extends ClientEngine {
                 })
             },
             // status report function
-            (status) => {} //console.log(status) }
+            (status) => {
+                console.log(status)
+                this.app.setState({
+                    ping: Number.parseFloat(status.travelDuration * 1000.).toFixed(2) + 'ms'
+                })
+            }
         )
     }
 
-    sendOSCToServer(message) {
-        // Make sure the socket exists
-        if (this.socket) {
-            // Send the room name, the sender name, filters and the message
-            this.socket.emit(
-                'oscMessage',
-                this.app.state.id,
-                this.app.state.username,
-                this.app.state.userFilters,
-                message
-            )
-        }
+    getAdjustedSyncTime() {
+        if (this.syncClient == null) return 0
+        return this.syncClient.getSyncTime() - this.app.state.resetTime
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,15 +179,14 @@ class AppClientEngine extends ClientEngine {
 
     /// STEP
     preStepLogic() {
-        console.log('try sync')
+        // console.log('try sync')
         if (this.syncClient != null) {
-            this.transportSyncCount++
             if (this.app.state.sendClockMessages) {
                 if (this.app.state.xebraReady) {
                     console.log('sync')
                     this.app.xebraState.sendMessageToChannel(this.app.state.channel, [
                         this.app.state.clockMessage,
-                        this.syncClient.getSyncTime()
+                        this.getAdjustedSyncTime()
                     ])
                 }
             }
