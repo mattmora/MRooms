@@ -1,4 +1,4 @@
-# Max Rooms
+# MRooms
 https://mrooms.herokuapp.com
 
 Max Rooms is a web application that allows sending OSC messages over the internet and to a local WebSocket server. 
