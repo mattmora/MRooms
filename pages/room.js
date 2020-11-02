@@ -130,38 +130,38 @@ class Room extends Component {
                 console.log('WebMidi could not be enabled.', err)
             } else {
                 console.log('WebMidi enabled!')
-            }
 
-            //name our visible MIDI input and output ports
-            console.log('---')
-            console.log('Inputs Ports: ')
-            for (let i = 0; i < WebMidi.inputs.length; i++) {
-                console.log(i + ': ' + WebMidi.inputs[i].name)
-            }
+                //name our visible MIDI input and output ports
+                console.log('---')
+                console.log('Inputs Ports: ')
+                for (let i = 0; i < WebMidi.inputs.length; i++) {
+                    console.log(i + ': ' + WebMidi.inputs[i].name)
+                }
 
-            console.log('---')
-            console.log('Output Ports: ')
-            for (let i = 0; i < WebMidi.outputs.length; i++) {
-                console.log(i + ': ' + WebMidi.outputs[i].name)
-            }
-        })
-        
-        // Reacting when a new device becomes available
-        WebMidi.addListener('connected', (e) => {
-            this.setState({})
-        })
+                console.log('---')
+                console.log('Output Ports: ')
+                for (let i = 0; i < WebMidi.outputs.length; i++) {
+                    console.log(i + ': ' + WebMidi.outputs[i].name)
+                }
 
-        // Reacting when a device becomes unavailable
-        WebMidi.addListener('disconnected', (e) => {
-            let input = this.state.midiInputSelect
-            if (WebMidi.inputs[this.state.midiInputSelect] == null) {
-                input = -1
+                // Reacting when a new device becomes available
+                WebMidi.addListener('connected', (e) => {
+                    this.setState({})
+                })
+
+                // Reacting when a device becomes unavailable
+                WebMidi.addListener('disconnected', (e) => {
+                    let input = this.state.midiInputSelect
+                    if (WebMidi.inputs[this.state.midiInputSelect] == null) {
+                        input = -1
+                    }
+                    let output = this.state.midiOutputSelect
+                    if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
+                        output = -1
+                    }
+                    this.setState({ midiInputSelect: input, midiOutputSelect: output })
+                })
             }
-            let output = this.state.midiOutputSelect
-            if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
-                output = -1
-            }
-            this.setState({ midiInputSelect: input, midiOutputSelect: output })
         })
     }
 
