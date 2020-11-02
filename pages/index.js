@@ -142,7 +142,7 @@ class Index extends Component {
                                     color="textSecondary"
                                     component="p"
                                 >
-                                    UtilOSC can connect with Max through the <b>mira.channel</b>{' '}
+                                    Max Rooms can connect with Max through the <b>mira.channel</b>{' '}
                                     object from the Max package{' '}
                                     <a href="https://github.com/Cycling74/miraweb">MiraWeb</a>.
                                 </Typography>
@@ -150,7 +150,7 @@ class Index extends Component {
                                     Below is a minimal patch that can send and receive messages.
                                     Note that a <b>mira.frame</b> object is required to establish a
                                     connection. You can download the patch by clicking{' '}
-                                    <a href="/downloads/utiloscexamplepatch.maxpat" download>
+                                    <a href="/downloads/maxroomsexamplepatch.maxpat" download>
                                         here
                                     </a>
                                     .
@@ -171,7 +171,7 @@ class Index extends Component {
                 <Grid container spacing={1} direction="column" alignItems="center" justify="center">
                     <Grid item xs={6}>
                         <Typography>
-                            <a href="https://github.com/mattmora/UtilOSC">Github</a>
+                            <a href="https://github.com/mattmora/MaxRooms">Github</a>
                         </Typography>
                         <p></p>
                     </Grid>

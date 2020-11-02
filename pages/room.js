@@ -358,7 +358,7 @@ class Room extends Component {
         return (
             <Layout>
                 <Head>
-                    <title>UtilOSC Room {this.state.id}</title>
+                    <title>Max Room {this.state.id}</title>
                 </Head>
                 <h1>
                     {this.state.id} : {this.state.username}

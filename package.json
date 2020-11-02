@@ -1,5 +1,5 @@
 {
-    "name": "utilosc",
+    "name": "maxrooms",
     "version": "0.1.0",
     "license": "MIT",
     "private": true,
@@ -30,13 +30,13 @@
     "main": "next.config.js",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/mattmora/UtilOSC.git"
+        "url": "git+https://github.com/mattmora/MaxRooms.git"
     },
     "author": "",
     "bugs": {
-        "url": "https://github.com/mattmora/UtilOSC/issues"
+        "url": "https://github.com/mattmora/MaxRooms/issues"
     },
-    "homepage": "https://github.com/mattmora/UtilOSC#readme",
+    "homepage": "https://github.com/mattmora/MaxRooms#readme",
     "description": "",
     "prettier": {
         "trailingComma": "none",
