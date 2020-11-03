@@ -69,7 +69,7 @@ class Room extends Component {
             users: [],
             userFilters: {}, // Keys are the elements of users array, values are { send: bool, receive: bool }
             clockMessage: defaultClockMessage,
-            sendClockMessages: false,
+            clock: false,
             xebraReady: false,
             midiInputSelect: -1,
             midiOutputSelect: -1,
@@ -183,7 +183,7 @@ class Room extends Component {
     }
 
     handleChange = (e) => {
-        if (e.target.id === 'sendClockMessages') {
+        if (e.target.id === 'clock') {
             this.state[e.target.id] = e.target.checked
         } else if (e.target.name === 'midiInputSelect' && WebMidi != null) {
             // Remove all listeners for old input
@@ -584,7 +584,7 @@ class Room extends Component {
                             labelPlacement="end"
                             control={
                                 <Checkbox
-                                    id="sendClockMessages"
+                                    id="clock"
                                     color="primary"
                                     onChange={this.handleChange}
                                 />

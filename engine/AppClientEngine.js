@@ -186,7 +186,7 @@ class AppClientEngine extends ClientEngine {
     preStepLogic() {
         // console.log('try sync')
         if (this.syncClient != null) {
-            if (this.app.state.sendClockMessages) {
+            if (this.app.state.clock) {
                 if (this.app.state.xebraReady) {
                     console.log('sync')
                     this.app.xebraState.sendMessageToChannel(this.app.state.channel, [
