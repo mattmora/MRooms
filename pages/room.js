@@ -339,6 +339,8 @@ class Room extends Component {
     }
 
     render() {
+        const { router } = this.props
+
         const midiInputs = [
             <MenuItem key={-1} value={-1}>
                 No device
@@ -531,7 +533,12 @@ class Room extends Component {
                         <p></p>
                     </div>
                 ) : (
-                    <p> Error: MIDI not available. Your browser may not be compatible.</p>
+                    <p>
+                        Error: MIDI not available. You may need to use{' '}
+                        <a href={window.location.href.replace('http://', 'https://')}>https</a> or
+                        your browser may not be compatible. Web MIDI is not supported in Firefox or
+                        Internet Explorer.
+                    </p>
                 )}
                 <Divider></Divider>
                 <p>

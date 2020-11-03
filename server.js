@@ -19,7 +19,11 @@ const { Lib } = require('lance-gg')
 
 nextApp.prepare().then(() => {
     app.get('*', (req, res) => {
-        return nextHandler(req, res)
+        if (req.secure) {
+            return nextHandler(req, res)
+        } else {
+            res.redirect('https://' + req.headers.host + req.url)
+        }
     })
 
     const server = app.listen(port, (err) => {
