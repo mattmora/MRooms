@@ -36,13 +36,20 @@ class AppClientEngine extends ClientEngine {
                     if (!this.app.state.userFilters[senderName].receive) return
 
                     // Xebra
-                    // Split the message into an array then send it
-                    // to max where it will become a list
-                    var messageArray = message.split(' ').map((v) => {
-                        if (isNaN(v)) return v
-                        else return Number(v)
-                    })
+                    let messageArray
+                    // Message might already be an array if it came from Max
+                    if (Array.isArray(message)) {
+                        messageArray = message
+                    }
+                    // Otherwise split the message into an array
+                    else {
+                        messageArray = message.split(' ').map((v) => {
+                            if (isNaN(v)) return v
+                            else return Number(v)
+                        })
+                    }
 
+                    // Then send it to max where it will become a list
                     if (this.app.state.xebraReady) {
                         this.app.xebraState.sendMessageToChannel(
                             this.app.state.channel,
@@ -51,10 +58,8 @@ class AppClientEngine extends ClientEngine {
                     }
 
                     this.app.setState({
-                        remoteMessage: `${message} (from ${senderName})`
+                        remoteMessage: `${messageArray} (from ${senderName})`
                     })
-
-                    console.log(message)
                 })
 
                 this.socket.on('midiMessageFromServer', (senderName, data, timestamp) => {
@@ -93,7 +98,7 @@ class AppClientEngine extends ClientEngine {
                     }
                 })
 
-                this.socket.on('resetClock', time => {
+                this.socket.on('resetClock', (time) => {
                     this.app.setState({ resetTime: time })
                 })
 
@@ -163,7 +168,7 @@ class AppClientEngine extends ClientEngine {
             (status) => {
                 console.log(status)
                 this.app.setState({
-                    ping: Number.parseFloat(status.travelDuration * 1000.).toFixed(2) + 'ms'
+                    ping: Number.parseFloat(status.travelDuration * 1000).toFixed(2) + 'ms'
                 })
             }
         )

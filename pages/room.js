@@ -383,8 +383,8 @@ class Room extends Component {
                             elements of messages are separated with spaces. Message format is
                             otherwise arbitrary, however it is recommended to use OSC formatting
                             (first element is an address starting with '/' and following elements
-                            are arguments). <br></br>Ex. /hello 1 2 text 34 → [ /hello, 1, 2, text,
-                            34 ]<br></br>Messages from others in the room will also be sent to the
+                            are arguments). <br></br>Ex. /hello 1 2 text 34 → [/hello, 1, 2, text,
+                            34]<br></br>Messages from others in the room will also be sent to the
                             mira.channel object.
                         </p>
                     </Grid>

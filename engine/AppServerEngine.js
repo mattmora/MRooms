@@ -21,8 +21,8 @@ class AppServerEngine extends ServerEngine {
         super.onPlayerConnected(socket)
 
         socket.on('messageToServer', (roomName, senderName, filters, message) => {
-            console.log(message)
-            console.log(roomName)
+            // console.log(message)
+            // console.log(roomName)
             for (const id of this.getRoomPlayers(roomName)) {
                 if (filters[this.connectedPlayers[id].socket.userName].send)
                     this.connectedPlayers[id].socket.emit('messageFromServer', senderName, message)
@@ -66,7 +66,7 @@ class AppServerEngine extends ServerEngine {
                 i++
             }
 
-            console.log(uniqueName)
+            // console.log(uniqueName)
 
             // Assign the name and add it to the list
             socket.userName = uniqueName
@@ -85,7 +85,7 @@ class AppServerEngine extends ServerEngine {
         })
 
         socket.on('resetClockRequest', (roomName, time) => {
-            console.log(`Reset clock at ${time}`)
+            // console.log(`Reset clock at ${time}`)
             this.rooms[roomName].resetTime = time
             for (const id of this.getRoomPlayers(roomName)) {
                 this.connectedPlayers[id].socket.emit('resetClock', time)
