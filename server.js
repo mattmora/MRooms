@@ -6,24 +6,24 @@
 const dev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 3000
 
-const app = require('express')()
-const socket = require('socket.io')
-
 const next = require('next')
+const express = require('express')
+const sslRedirect = require('heroku-ssl-redirect').default
+
 const nextApp = next({ dev })
 const nextHandler = nextApp.getRequestHandler()
 
+const socket = require('socket.io')
 const AppGameEngine = require('./engine/AppGameEngine')
 const AppServerEngine = require('./engine/AppServerEngine')
 const { Lib } = require('lance-gg')
 
 nextApp.prepare().then(() => {
+    const app = express()
+    app.use(sslRedirect())
+
     app.get('*', (req, res) => {
-        if (req.secure) {
-            return nextHandler(req, res)
-        } else {
-            res.redirect('https://' + req.headers.host + req.url)
-        }
+        return nextHandler(req, res)
     })
 
     const server = app.listen(port, (err) => {

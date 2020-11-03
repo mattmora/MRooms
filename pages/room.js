@@ -486,60 +486,63 @@ class Room extends Component {
                 </Grid>
                 <p></p>
                 <Divider />
-                {WebMidi != null && WebMidi.enabled ? (
-                    <div>
-                        <p>
-                            Set MIDI input and output devices. MIDI from your input device will be
-                            sent to users in the room. MIDI from other users will be sent to your
-                            output device. The send and receive settings in the user list at the top
-                            of the page also apply here.
-                        </p>
-                        <Grid container spacing={1} alignItems="center">
-                            <Grid item xs={4}>
-                                <div>
+                {/* Don't run any MIDI stuff server side */}
+                {typeof window !== 'undefined' &&
+                // Client-side, check if WebMidi is working and render as appropriate
+                    (WebMidi != null && WebMidi.enabled ? ( 
+                        <div>
+                            <p>
+                                Set MIDI input and output devices. MIDI from your input device will
+                                be sent to users in the room. MIDI from other users will be sent to
+                                your output device. The send and receive settings in the user list
+                                at the top of the page also apply here.
+                            </p>
+                            <Grid container spacing={1} alignItems="center">
+                                <Grid item xs={4}>
+                                    <div>
+                                        <FormControl fullWidth variant="outlined">
+                                            <InputLabel id="midi-input-select-label">
+                                                MIDI Input
+                                            </InputLabel>
+                                            <Select
+                                                labelId="midi-input-select-label"
+                                                name="midiInputSelect"
+                                                value={this.state.midiInputSelect}
+                                                onChange={this.handleChange}
+                                                label="MIDI Input"
+                                            >
+                                                {midiInputs}
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+                                </Grid>
+                                <Grid item xs={4}>
                                     <FormControl fullWidth variant="outlined">
-                                        <InputLabel id="midi-input-select-label">
-                                            MIDI Input
+                                        <InputLabel id="midi-output-select-label">
+                                            MIDI Output
                                         </InputLabel>
                                         <Select
-                                            labelId="midi-input-select-label"
-                                            name="midiInputSelect"
-                                            value={this.state.midiInputSelect}
+                                            labelId="midi-output-select-label"
+                                            name="midiOutputSelect"
+                                            value={this.state.midiOutputSelect}
                                             onChange={this.handleChange}
-                                            label="MIDI Input"
+                                            label="MIDI Output"
                                         >
-                                            {midiInputs}
+                                            {midiOutputs}
                                         </Select>
                                     </FormControl>
-                                </div>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={4}>
-                                <FormControl fullWidth variant="outlined">
-                                    <InputLabel id="midi-output-select-label">
-                                        MIDI Output
-                                    </InputLabel>
-                                    <Select
-                                        labelId="midi-output-select-label"
-                                        name="midiOutputSelect"
-                                        value={this.state.midiOutputSelect}
-                                        onChange={this.handleChange}
-                                        label="MIDI Output"
-                                    >
-                                        {midiOutputs}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                        </Grid>
-                        <p></p>
-                    </div>
-                ) : (
-                    <p>
-                        Error: MIDI not available. You may need to use{' '}
-                        <a href={window.location.href.replace('http://', 'https://')}>https</a> or
-                        your browser may not be compatible. Web MIDI is not supported in Firefox or
-                        Internet Explorer.
-                    </p>
-                )}
+                            <p></p>
+                        </div>
+                    ) : (
+                        <p>
+                            Error: MIDI not available. You may need to use{' '}
+                            <a href={window.location.href.replace('http://', 'https://')}>https</a>{' '}
+                            or your browser may not be compatible. Web MIDI is not supported in
+                            Firefox or Internet Explorer.
+                        </p>
+                    ))}
                 <Divider></Divider>
                 <p>
                     A clock synchronized for everyone in the room. It takes a moment to synchronize
