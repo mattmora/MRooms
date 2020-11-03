@@ -86,6 +86,7 @@ class AppServerEngine extends ServerEngine {
 
         socket.on('resetClockRequest', (roomName, time) => {
             // console.log(`Reset clock at ${time}`)
+            if (this.rooms[roomName] == null) return
             this.rooms[roomName].resetTime = time
             for (const id of this.getRoomPlayers(roomName)) {
                 this.connectedPlayers[id].socket.emit('resetClock', time)
