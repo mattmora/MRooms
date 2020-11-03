@@ -2,6 +2,7 @@ import { Component } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { withRouter } from 'next/router'
+import useSWR from 'swr'
 import Layout from '../components/layout'
 import TransportTime from '../components/transportTime'
 import UserList from '../components/userList'
@@ -22,13 +23,13 @@ import MenuItem from '@material-ui/core/MenuItem'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
 
-import WebMidi from 'webmidi'
 import AppGameEngine from '../engine/AppGameEngine'
 import AppClientEngine from '../engine/AppClientEngine'
 import { Lib } from 'lance-gg'
 import normalizePort from 'normalize-port'
 import { State, SUPPORTED_OBJECTS, CONNECTION_STATES } from 'xebra.js'
-import { ListItemText } from '@material-ui/core'
+
+let WebMidi = null
 
 const defaultRoomName = 'Default'
 const defaultUserNames = ['User']
@@ -122,46 +123,50 @@ class Room extends Component {
             this.createXebraClient(this.state.address, normalizePort(this.state.port))
         }
 
-        //https://editor.p5js.org/dbarrett/sketches/HJhBG-LI7
-        WebMidi.enable((err) => {
-            //check if WebMidi.js is enabled
-            if (err) {
-                console.log('WebMidi could not be enabled.', err)
-            } else {
-                console.log('WebMidi enabled!')
+        if (typeof window !== 'undefined') {
+            WebMidi = require('webmidi')
 
-                //name our visible MIDI input and output ports
-                console.log('---')
-                console.log('Inputs Ports: ')
-                for (let i = 0; i < WebMidi.inputs.length; i++) {
-                    console.log(i + ': ' + WebMidi.inputs[i].name)
-                }
+            //https://editor.p5js.org/dbarrett/sketches/HJhBG-LI7
+            WebMidi.enable((err) => {
+                //check if WebMidi.js is enabled
+                if (err) {
+                    console.log('WebMidi could not be enabled.', err)
+                } else {
+                    console.log('WebMidi enabled!')
 
-                console.log('---')
-                console.log('Output Ports: ')
-                for (let i = 0; i < WebMidi.outputs.length; i++) {
-                    console.log(i + ': ' + WebMidi.outputs[i].name)
-                }
-
-                // Reacting when a new device becomes available
-                WebMidi.addListener('connected', (e) => {
-                    this.setState({})
-                })
-
-                // Reacting when a device becomes unavailable
-                WebMidi.addListener('disconnected', (e) => {
-                    let input = this.state.midiInputSelect
-                    if (WebMidi.inputs[this.state.midiInputSelect] == null) {
-                        input = -1
+                    //name our visible MIDI input and output ports
+                    console.log('---')
+                    console.log('Inputs Ports: ')
+                    for (let i = 0; i < WebMidi.inputs.length; i++) {
+                        console.log(i + ': ' + WebMidi.inputs[i].name)
                     }
-                    let output = this.state.midiOutputSelect
-                    if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
-                        output = -1
+
+                    console.log('---')
+                    console.log('Output Ports: ')
+                    for (let i = 0; i < WebMidi.outputs.length; i++) {
+                        console.log(i + ': ' + WebMidi.outputs[i].name)
                     }
-                    this.setState({ midiInputSelect: input, midiOutputSelect: output })
-                })
-            }
-        })
+
+                    // Reacting when a new device becomes available
+                    WebMidi.addListener('connected', (e) => {
+                        this.setState({})
+                    })
+
+                    // Reacting when a device becomes unavailable
+                    WebMidi.addListener('disconnected', (e) => {
+                        let input = this.state.midiInputSelect
+                        if (WebMidi.inputs[this.state.midiInputSelect] == null) {
+                            input = -1
+                        }
+                        let output = this.state.midiOutputSelect
+                        if (WebMidi.outputs[this.state.midiOutputSelect] == null) {
+                            output = -1
+                        }
+                        this.setState({ midiInputSelect: input, midiOutputSelect: output })
+                    })
+                }
+            })
+        }
     }
 
     componentWillUnmount() {
@@ -171,13 +176,15 @@ class Room extends Component {
             this.xebraState.close()
             this.xebraReady = false
         }
-        WebMidi.disable()
+        if (WebMidi != null && WebMidi.enabled) {
+            WebMidi.disable()
+        }
     }
 
     handleChange = (e) => {
         if (e.target.id === 'sendClockMessages') {
             this.state[e.target.id] = e.target.checked
-        } else if (e.target.name === 'midiInputSelect') {
+        } else if (e.target.name === 'midiInputSelect' && WebMidi != null) {
             // Remove all listeners for old input
             if (this.state.midiInputSelect >= 0) {
                 if (WebMidi.inputs[this.state.midiInputSelect] != null)
@@ -204,7 +211,7 @@ class Room extends Component {
                     )
                 })
             }
-        } else if (e.target.name === 'midiOutputSelect') {
+        } else if (e.target.name === 'midiOutputSelect' && WebMidi != null) {
             this.setState({ midiOutputSelect: e.target.value })
         } else {
             // if (e.target.value.includes(/[^\x00-\xFF]/g, '')) console.log('OSC only supports ASCII characters.')
@@ -250,6 +257,7 @@ class Room extends Component {
     }
 
     sendMidiMessageOut = (message) => {
+        if (WebMidi == null) return
         if (WebMidi.outputs[this.state.midiOutputSelect] == null) return
         const data = Object.values(message.data)
         const status = data.splice(0, 1)
@@ -340,19 +348,21 @@ class Room extends Component {
                 No device
             </MenuItem>
         ]
-        for (let i = 0; i < WebMidi.inputs.length; ++i) {
-            midiInputs.push(
-                <MenuItem key={i} value={i}>
-                    {WebMidi.inputs[i].name}
-                </MenuItem>
-            )
-        }
-        for (let i = 0; i < WebMidi.outputs.length; ++i) {
-            midiOutputs.push(
-                <MenuItem key={i} value={i}>
-                    {WebMidi.outputs[i].name}
-                </MenuItem>
-            )
+        if (WebMidi != null) {
+            for (let i = 0; i < WebMidi.inputs.length; ++i) {
+                midiInputs.push(
+                    <MenuItem key={i} value={i}>
+                        {WebMidi.inputs[i].name}
+                    </MenuItem>
+                )
+            }
+            for (let i = 0; i < WebMidi.outputs.length; ++i) {
+                midiOutputs.push(
+                    <MenuItem key={i} value={i}>
+                        {WebMidi.outputs[i].name}
+                    </MenuItem>
+                )
+            }
         }
         return (
             <Layout>
@@ -473,58 +483,77 @@ class Room extends Component {
                 </Grid>
                 <p></p>
                 <Divider />
-                {WebMidi.enabled ? (
+                {WebMidi != null && WebMidi.enabled ? (
                     <div>
-                    <p>
-                    Set MIDI input and output devices. MIDI from your input device will be sent to
-                    users in the room. MIDI from other users will be sent to your output device. The
-                    send and receive settings in the user list at the top of the page also apply
-                    here.
-                </p>
-                <Grid container spacing={1} alignItems="center">
-                    <Grid item xs={4}>
-                        <div>
-                            <FormControl fullWidth variant="outlined">
-                                <InputLabel id="midi-input-select-label">MIDI Input</InputLabel>
-                                <Select
-                                    labelId="midi-input-select-label"
-                                    name="midiInputSelect"
-                                    value={this.state.midiInputSelect}
-                                    onChange={this.handleChange}
-                                    label="MIDI Input"
-                                >
-                                    {midiInputs}
-                                </Select>
-                            </FormControl>
-                        </div>
-                    </Grid>
-                    <Grid item xs={4}>
-                        <FormControl fullWidth variant="outlined">
-                            <InputLabel id="midi-output-select-label">MIDI Output</InputLabel>
-                            <Select
-                                labelId="midi-output-select-label"
-                                name="midiOutputSelect"
-                                value={this.state.midiOutputSelect}
-                                onChange={this.handleChange}
-                                label="MIDI Output"
-                            >
-                                {midiOutputs}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                </Grid>
-                <p></p>
-                </div>
+                        <p>
+                            Set MIDI input and output devices. MIDI from your input device will be
+                            sent to users in the room. MIDI from other users will be sent to your
+                            output device. The send and receive settings in the user list at the top
+                            of the page also apply here.
+                        </p>
+                        <Grid container spacing={1} alignItems="center">
+                            <Grid item xs={4}>
+                                <div>
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel id="midi-input-select-label">
+                                            MIDI Input
+                                        </InputLabel>
+                                        <Select
+                                            labelId="midi-input-select-label"
+                                            name="midiInputSelect"
+                                            value={this.state.midiInputSelect}
+                                            onChange={this.handleChange}
+                                            label="MIDI Input"
+                                        >
+                                            {midiInputs}
+                                        </Select>
+                                    </FormControl>
+                                </div>
+                            </Grid>
+                            <Grid item xs={4}>
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel id="midi-output-select-label">
+                                        MIDI Output
+                                    </InputLabel>
+                                    <Select
+                                        labelId="midi-output-select-label"
+                                        name="midiOutputSelect"
+                                        value={this.state.midiOutputSelect}
+                                        onChange={this.handleChange}
+                                        label="MIDI Output"
+                                    >
+                                        {midiOutputs}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        </Grid>
+                        <p></p>
+                    </div>
                 ) : (
-                    <p> Error: MIDI not enabled.</p>
+                    <p> Error: MIDI not available. Your browser may not be compatible.</p>
                 )}
-                
                 <Divider></Divider>
                 <p>
                     A clock synchronized for everyone in the room. It takes a moment to synchronize
                     upon entering the room. Check the box to send messages to Max with the time.
                     Click the reset button to reset the clock to 0 for everyone in the room.
                 </p>
+                <Grid container spacing={1} alignItems="center">
+                    <Grid item xs="auto">
+                        <Button
+                            id="resetClockButton"
+                            variant="outlined"
+                            color="primary"
+                            size="large"
+                            onClick={this.resetClock}
+                        >
+                            Reset
+                        </Button>
+                    </Grid>
+                    <Grid item xs="auto">
+                        <TransportTime room={this} updateInterval={30} />
+                    </Grid>
+                </Grid>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs="auto">
                         <TextField
@@ -549,22 +578,6 @@ class Room extends Component {
                                 />
                             }
                         />
-                    </Grid>
-                </Grid>
-                <Grid container spacing={1} alignItems="center">
-                    <Grid item xs="auto">
-                        <Button
-                            id="resetClockButton"
-                            variant="outlined"
-                            color="primary"
-                            size="large"
-                            onClick={this.resetClock}
-                        >
-                            Reset
-                        </Button>
-                    </Grid>
-                    <Grid item xs="auto">
-                        <TransportTime room={this} updateInterval={30} />
                     </Grid>
                 </Grid>
             </Layout>
