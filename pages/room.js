@@ -125,6 +125,8 @@ class Room extends Component {
         if (typeof window !== 'undefined') {
             WebMidi = require('webmidi')
 
+            console.log(navigator)
+
             //https://editor.p5js.org/dbarrett/sketches/HJhBG-LI7
             WebMidi.enable((err) => {
                 //check if WebMidi.js is enabled
@@ -553,6 +555,7 @@ class Room extends Component {
                         <TransportTime room={this} updateInterval={30} />
                     </Grid>
                 </Grid>
+                <p></p>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs="auto">
                         <TextField
