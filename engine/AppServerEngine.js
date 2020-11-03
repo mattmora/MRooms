@@ -29,13 +29,14 @@ class AppServerEngine extends ServerEngine {
             }
         })
 
-        socket.on('midiMessageToServer', (roomName, senderName, filters, message) => {
+        socket.on('midiMessageToServer', (roomName, senderName, filters, data, timestamp) => {
             for (const id of this.getRoomPlayers(roomName)) {
                 if (filters[this.connectedPlayers[id].socket.userName].send)
                     this.connectedPlayers[id].socket.emit(
                         'midiMessageFromServer',
                         senderName,
-                        message
+                        data, 
+                        timestamp
                     )
             }
         })

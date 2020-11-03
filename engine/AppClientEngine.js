@@ -57,10 +57,10 @@ class AppClientEngine extends ClientEngine {
                     console.log(message)
                 })
 
-                this.socket.on('midiMessageFromServer', (senderName, message) => {
+                this.socket.on('midiMessageFromServer', (senderName, data, timestamp) => {
                     if (!this.app.state.userFilters[senderName].receive) return
-                    console.log(message)
-                    this.app.sendMidiMessageOut(message)
+                    console.log(data)
+                    this.app.sendMidiMessageOut(data, timestamp)
                 })
 
                 this.socket.on('roomRequestResponse', (state, userName, roomInfo) => {

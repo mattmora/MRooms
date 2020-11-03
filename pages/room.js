@@ -208,7 +208,8 @@ class Room extends Component {
                         this.state.id,
                         this.state.username,
                         this.state.userFilters,
-                        message
+                        Object.values(message.data),
+                        message.timestamp
                     )
                 })
             }
@@ -257,12 +258,11 @@ class Room extends Component {
         }
     }
 
-    sendMidiMessageOut = (message) => {
+    sendMidiMessageOut = (data, timestamp) => {
         if (WebMidi == null) return
         if (WebMidi.outputs[this.state.midiOutputSelect] == null) return
-        const data = Object.values(message.data)
         const status = data.splice(0, 1)
-        WebMidi.outputs[this.state.midiOutputSelect].send(status, data, message.timestamp)
+        WebMidi.outputs[this.state.midiOutputSelect].send(status, data, timestamp)
     }
 
     attemptConnection = () => {
