@@ -306,7 +306,7 @@ class Room extends Component {
             console.log(message)
             if (message != null) {
                 this.setState({
-                    localSocketMessage: `Message: ${message} (from ${channel})`
+                    localSocketMessage: `${message.join(' ')} (from ${channel})`
                 })
                 this.sendMessageToServer(message)
             } else {

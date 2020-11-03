@@ -58,7 +58,7 @@ class AppClientEngine extends ClientEngine {
                     }
 
                     this.app.setState({
-                        remoteMessage: `${messageArray} (from ${senderName})`
+                        remoteMessage: `${messageArray.join(' ')} (from ${senderName})`
                     })
                 })
 
