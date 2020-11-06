@@ -144,7 +144,7 @@ class Index extends Component {
                                 >
                                     MRooms can connect with Max through the <b>mira.channel</b>{' '}
                                     object from the Max package{' '}
-                                    <a href="https://github.com/Cycling74/miraweb">MiraWeb</a>.
+                                    <a href="https://github.com/Cycling74/miraweb" target="_blank">MiraWeb</a>.
                                 </Typography>
                                 <Typography variant="body2" color="textSecondary" component="p">
                                     Below is a minimal patch that can send and receive messages.
@@ -152,6 +152,11 @@ class Index extends Component {
                                     connection. You can download the patch by clicking{' '}
                                     <a href="/downloads/mroomsexamplepatch.maxpat" download>
                                         here
+                                    </a>
+                                    . If you want to use MRooms to communicate with OSC-based
+                                    applications, such as <a href="http://www.wekinator.org/" target="_blank">Wekinator</a>, try taking a look at{' '}
+                                    <a href="/downloads/mroomsoscpatch.maxpat" download>
+                                        this patch
                                     </a>
                                     .
                                 </Typography>
@@ -171,7 +176,7 @@ class Index extends Component {
                 <Grid container spacing={1} direction="column" alignItems="center" justify="center">
                     <Grid item xs={6}>
                         <Typography>
-                            <a href="https://github.com/mattmora/MRooms">Github</a>
+                            <a href="https://github.com/mattmora/MRooms" target="_blank">Github</a>
                         </Typography>
                         <p></p>
                     </Grid>

@@ -1,5 +1,4 @@
 # MRooms
 https://mrooms.herokuapp.com
 
-MRooms is a web application that allows sending OSC messages over the internet and to a local WebSocket server. 
-It is designed to be used with Max and MiraWeb or as a base for standalone web apps.
+MRooms is a web application intended to be used with Max and the Max package MiraWeb that allows for over-the-internet communcation between multiple users. It also supports MIDI and keeps a clock synchronized for all users in a room.
