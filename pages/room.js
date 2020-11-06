@@ -262,7 +262,7 @@ class Room extends Component {
         if (WebMidi == null) return
         if (WebMidi.outputs[this.state.midiOutputSelect] == null) return
         const status = data.splice(0, 1)
-        WebMidi.outputs[this.state.midiOutputSelect].send(status, data, timestamp)
+        WebMidi.outputs[this.state.midiOutputSelect].send(status, data)
     }
 
     attemptConnection = () => {
