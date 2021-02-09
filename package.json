@@ -20,7 +20,7 @@
         "react": "16.13.1",
         "react-dom": "16.13.1",
         "react-window": "^1.8.5",
-        "socket.io": "^2.3.0",
+        "socket.io": "^2.4.1",
         "tone": "^14.7.58",
         "webmidi": "^2.5.1",
         "xebra.js": "^1.2.5"
