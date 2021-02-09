@@ -24,18 +24,30 @@ class AppServerEngine extends ServerEngine {
             // console.log(message)
             // console.log(roomName)
             for (const id of this.getRoomPlayers(roomName)) {
-                if (filters[this.connectedPlayers[id].socket.userName].send)
+                let userName = this.connectedPlayers[id].socket.userName
+                // Check send filter, if the filter or send component of filter doesn't exist, send through
+                if (
+                    !Object.keys(filters).includes(userName) ||
+                    filters[userName].send == undefined ||
+                    filters[userName].send
+                )
                     this.connectedPlayers[id].socket.emit('messageFromServer', senderName, message)
             }
         })
 
         socket.on('midiMessageToServer', (roomName, senderName, filters, data, timestamp) => {
             for (const id of this.getRoomPlayers(roomName)) {
-                if (filters[this.connectedPlayers[id].socket.userName].send)
+                let userName = this.connectedPlayers[id].socket.userName
+                // Check send filter, if the filter or send component of filter doesn't exist, send through
+                if (
+                    !Object.keys(filters).includes(userName) ||
+                    filters[userName].send == undefined ||
+                    filters[userName].send
+                )
                     this.connectedPlayers[id].socket.emit(
                         'midiMessageFromServer',
                         senderName,
-                        data, 
+                        data,
                         timestamp
                     )
             }

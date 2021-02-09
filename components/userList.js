@@ -43,7 +43,11 @@ export default class UserList extends Component {
                                         <Checkbox
                                             id={`send-${users[index]}`}
                                             color="primary"
-                                            defaultChecked={userFilters[users[index]] ? Boolean(userFilters[users[index]].send) : true}
+                                            defaultChecked={
+                                                userFilters[users[index]]
+                                                    ? Boolean(userFilters[users[index]].send)
+                                                    : true
+                                            }
                                             onChange={this.handleChange}
                                         />
                                     }
@@ -57,7 +61,11 @@ export default class UserList extends Component {
                                         <Checkbox
                                             id={`receive-${users[index]}`}
                                             color="primary"
-                                            defaultChecked={userFilters[users[index]] ? Boolean(userFilters[users[index]].receive) : true}
+                                            defaultChecked={
+                                                userFilters[users[index]]
+                                                    ? Boolean(userFilters[users[index]].receive)
+                                                    : true
+                                            }
                                             onChange={this.handleChange}
                                         />
                                     }

@@ -67,7 +67,7 @@ class Room extends Component {
             localSocketState: '',
             autoconnect: false,
             users: [],
-            userFilters: {}, // Keys are the elements of users array, values are { send: bool, receive: bool }
+            userFilters: {}, // Keys are usernames, values are { send: bool, receive: bool }
             clockMessage: defaultClockMessage,
             clock: false,
             xebraReady: false,

@@ -33,7 +33,14 @@ class AppClientEngine extends ClientEngine {
             return new Promise((resolve, reject) => {
                 // Receiving a message from the remote server
                 this.socket.on('messageFromServer', (senderName, message) => {
-                    if (!this.app.state.userFilters[senderName].receive) return
+                    // Ensure we have a filter for the sending user
+                    if (!Object.keys(this.app.state.userFilters).includes(senderName))
+                        this.app.state.userFilters[senderName] = { send: 'true', receive: 'true' }
+                    // We might only have the send part of the filter, if receive is undefined set to true
+                    else if (this.app.state.userFilters[senderName].receive == undefined)
+                        this.app.state.userFilters[senderName].receive = 'true'
+                    // Otherwise, receive is actually false, return
+                    else if (!this.app.state.userFilters[senderName].receive) return
 
                     // Xebra
                     let messageArray
@@ -63,7 +70,14 @@ class AppClientEngine extends ClientEngine {
                 })
 
                 this.socket.on('midiMessageFromServer', (senderName, data, timestamp) => {
-                    if (!this.app.state.userFilters[senderName].receive) return
+                    // Ensure we have a filter for the sending user
+                    if (!Object.keys(this.app.state.userFilters).includes(senderName))
+                        this.app.state.userFilters[senderName] = { send: 'true', receive: 'true' }
+                    // We might only have the send part of the filter, if receive is undefined set to true
+                    else if (this.app.state.userFilters[senderName].receive == undefined)
+                        this.app.state.userFilters[senderName].receive = 'true'
+                    // Otherwise, receive is actually false, return
+                    else if (!this.app.state.userFilters[senderName].receive) return
                     console.log(data)
                     this.app.sendMidiMessageOut(data, timestamp)
                 })
@@ -92,9 +106,8 @@ class AppClientEngine extends ClientEngine {
                     // }
                     // Add filter objects for any new users
                     for (const userName of userList) {
-                        if (!Object.keys(this.app.state.userFilters).includes(userName)) {
+                        if (!Object.keys(this.app.state.userFilters).includes(userName))
                             this.app.state.userFilters[userName] = { send: 'true', receive: 'true' }
-                        }
                     }
                 })
 
